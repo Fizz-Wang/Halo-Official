@@ -1,0 +1,2145 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "04fa4492-053a-4a1c-aa15-25abb5f798af",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "acquisition_capabilities": {
+      "name": "acquisition_capabilities",
+      "columns": {
+        "capability_digest": {
+          "name": "capability_digest",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage_key": {
+          "name": "lineage_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "node_key": {
+          "name": "node_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_digest": {
+          "name": "session_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "intent": {
+          "name": "intent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "canonical_route": {
+          "name": "canonical_route",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "post_action": {
+          "name": "post_action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "logical_id": {
+          "name": "logical_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "generation": {
+          "name": "generation",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_kind": {
+          "name": "source_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "issued_at": {
+          "name": "issued_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_expires_at": {
+          "name": "source_expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "valid_until": {
+          "name": "valid_until",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "proof_cleanup_after": {
+          "name": "proof_cleanup_after",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_cleanup_after": {
+          "name": "source_cleanup_after",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revoked_at": {
+          "name": "revoked_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "attestation_version": {
+          "name": "attestation_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "attestation_key_id": {
+          "name": "attestation_key_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "authorization_attestation": {
+          "name": "authorization_attestation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_acquisition_capabilities_binding": {
+          "name": "idx_acquisition_capabilities_binding",
+          "columns": [
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action",
+            "logical_id",
+            "generation"
+          ],
+          "isUnique": false
+        },
+        "idx_acquisition_capabilities_cleanup_after": {
+          "name": "idx_acquisition_capabilities_cleanup_after",
+          "columns": [
+            "proof_cleanup_after"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "acquisition_capabilities_lineage_key_acquisition_lineages_lineage_key_fk": {
+          "name": "acquisition_capabilities_lineage_key_acquisition_lineages_lineage_key_fk",
+          "tableFrom": "acquisition_capabilities",
+          "tableTo": "acquisition_lineages",
+          "columnsFrom": [
+            "lineage_key"
+          ],
+          "columnsTo": [
+            "lineage_key"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "acquisition_capabilities_node_key_acquisition_nodes_node_key_fk": {
+          "name": "acquisition_capabilities_node_key_acquisition_nodes_node_key_fk",
+          "tableFrom": "acquisition_capabilities",
+          "tableTo": "acquisition_nodes",
+          "columnsFrom": [
+            "node_key"
+          ],
+          "columnsTo": [
+            "node_key"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_capabilities_node_binding": {
+          "name": "fk_acquisition_capabilities_node_binding",
+          "tableFrom": "acquisition_capabilities",
+          "tableTo": "acquisition_nodes",
+          "columnsFrom": [
+            "node_key",
+            "lineage_key",
+            "logical_id",
+            "generation"
+          ],
+          "columnsTo": [
+            "node_key",
+            "lineage_key",
+            "logical_id",
+            "generation"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_capabilities_lineage_binding": {
+          "name": "fk_acquisition_capabilities_lineage_binding",
+          "tableFrom": "acquisition_capabilities",
+          "tableTo": "acquisition_lineages",
+          "columnsFrom": [
+            "lineage_key",
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action"
+          ],
+          "columnsTo": [
+            "lineage_key",
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_acquisition_capabilities_generation": {
+          "name": "ck_acquisition_capabilities_generation",
+          "value": "\"acquisition_capabilities\".\"generation\" >= 0"
+        },
+        "ck_acquisition_capabilities_intent": {
+          "name": "ck_acquisition_capabilities_intent",
+          "value": "\"acquisition_capabilities\".\"intent\" IN ('poc', 'sales', 'demo', 'partner')"
+        },
+        "ck_acquisition_capabilities_route_action": {
+          "name": "ck_acquisition_capabilities_route_action",
+          "value": "(\"acquisition_capabilities\".\"intent\" = 'poc' AND \"acquisition_capabilities\".\"canonical_route\" = '/request-poc/' AND \"acquisition_capabilities\".\"post_action\" = '/request-poc/') OR (\"acquisition_capabilities\".\"intent\" = 'sales' AND \"acquisition_capabilities\".\"canonical_route\" = '/contact-sales/' AND \"acquisition_capabilities\".\"post_action\" = '/contact-sales/') OR (\"acquisition_capabilities\".\"intent\" = 'demo' AND \"acquisition_capabilities\".\"canonical_route\" = '/request-demo/' AND \"acquisition_capabilities\".\"post_action\" = '/request-demo/') OR (\"acquisition_capabilities\".\"intent\" = 'partner' AND \"acquisition_capabilities\".\"canonical_route\" = '/partners/apply/' AND \"acquisition_capabilities\".\"post_action\" = '/partners/apply/')"
+        },
+        "ck_acquisition_capabilities_lifecycle": {
+          "name": "ck_acquisition_capabilities_lifecycle",
+          "value": "\"acquisition_capabilities\".\"issued_at\" <= \"acquisition_capabilities\".\"source_expires_at\" AND \"acquisition_capabilities\".\"source_expires_at\" <= \"acquisition_capabilities\".\"valid_until\" AND \"acquisition_capabilities\".\"valid_until\" <= \"acquisition_capabilities\".\"proof_cleanup_after\" AND \"acquisition_capabilities\".\"proof_cleanup_after\" <= \"acquisition_capabilities\".\"source_cleanup_after\""
+        },
+        "ck_acquisition_capabilities_source_kind": {
+          "name": "ck_acquisition_capabilities_source_kind",
+          "value": "\"acquisition_capabilities\".\"source_kind\" IN ('initial', 'validation', 'backend_failure', 'unknown', 'possible_duplicate')"
+        },
+        "ck_acquisition_capabilities_attestation": {
+          "name": "ck_acquisition_capabilities_attestation",
+          "value": "\"acquisition_capabilities\".\"attestation_version\" = 1 AND length(\"acquisition_capabilities\".\"attestation_key_id\") > 0 AND length(\"acquisition_capabilities\".\"authorization_attestation\") > 0"
+        }
+      }
+    },
+    "acquisition_dispatch_observations": {
+      "name": "acquisition_dispatch_observations",
+      "columns": {
+        "observation_key": {
+          "name": "observation_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "operation_key": {
+          "name": "operation_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "observation_digest": {
+          "name": "observation_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "evidence_digest": {
+          "name": "evidence_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "acknowledged_at": {
+          "name": "acknowledged_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "observed_at": {
+          "name": "observed_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cleanup_after": {
+          "name": "cleanup_after",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "uq_acquisition_dispatch_observations_operation_digest": {
+          "name": "uq_acquisition_dispatch_observations_operation_digest",
+          "columns": [
+            "operation_key",
+            "observation_digest"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_dispatch_observations_binding": {
+          "name": "uq_acquisition_dispatch_observations_binding",
+          "columns": [
+            "observation_key",
+            "operation_key"
+          ],
+          "isUnique": true
+        },
+        "idx_acquisition_dispatch_observations_truth": {
+          "name": "idx_acquisition_dispatch_observations_truth",
+          "columns": [
+            "operation_key",
+            "outcome",
+            "observed_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "acquisition_dispatch_observations_operation_key_acquisition_dispatch_operations_operation_key_fk": {
+          "name": "acquisition_dispatch_observations_operation_key_acquisition_dispatch_operations_operation_key_fk",
+          "tableFrom": "acquisition_dispatch_observations",
+          "tableTo": "acquisition_dispatch_operations",
+          "columnsFrom": [
+            "operation_key"
+          ],
+          "columnsTo": [
+            "operation_key"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_acquisition_dispatch_observations_outcome": {
+          "name": "ck_acquisition_dispatch_observations_outcome",
+          "value": "\"acquisition_dispatch_observations\".\"outcome\" IN ('recorded', 'not_recorded', 'indeterminate')"
+        },
+        "ck_acquisition_dispatch_observations_evidence": {
+          "name": "ck_acquisition_dispatch_observations_evidence",
+          "value": "(\"acquisition_dispatch_observations\".\"outcome\" IN ('recorded', 'not_recorded') AND \"acquisition_dispatch_observations\".\"evidence_digest\" IS NOT NULL AND length(\"acquisition_dispatch_observations\".\"evidence_digest\") > 0 AND \"acquisition_dispatch_observations\".\"acknowledged_at\" IS NOT NULL AND \"acquisition_dispatch_observations\".\"acknowledged_at\" <= \"acquisition_dispatch_observations\".\"observed_at\") OR (\"acquisition_dispatch_observations\".\"outcome\" = 'indeterminate' AND \"acquisition_dispatch_observations\".\"acknowledged_at\" IS NULL AND (\"acquisition_dispatch_observations\".\"evidence_digest\" IS NULL OR length(\"acquisition_dispatch_observations\".\"evidence_digest\") > 0))"
+        },
+        "ck_acquisition_dispatch_observations_lifecycle": {
+          "name": "ck_acquisition_dispatch_observations_lifecycle",
+          "value": "\"acquisition_dispatch_observations\".\"observed_at\" <= \"acquisition_dispatch_observations\".\"cleanup_after\""
+        }
+      }
+    },
+    "acquisition_dispatch_operations": {
+      "name": "acquisition_dispatch_operations",
+      "columns": {
+        "operation_key": {
+          "name": "operation_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dispatch_key": {
+          "name": "dispatch_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage_key": {
+          "name": "lineage_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "logical_id": {
+          "name": "logical_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_node_key": {
+          "name": "source_node_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_generation": {
+          "name": "source_generation",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "candidate_fingerprint": {
+          "name": "candidate_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "payload_snapshot_ref": {
+          "name": "payload_snapshot_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "authorization_observation_key": {
+          "name": "authorization_observation_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "operation_kind": {
+          "name": "operation_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reserved_at": {
+          "name": "reserved_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cleanup_after": {
+          "name": "cleanup_after",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "uq_acquisition_dispatch_operations_source_kind": {
+          "name": "uq_acquisition_dispatch_operations_source_kind",
+          "columns": [
+            "source_node_key",
+            "operation_kind"
+          ],
+          "isUnique": true
+        },
+        "idx_acquisition_dispatch_operations_dispatch": {
+          "name": "idx_acquisition_dispatch_operations_dispatch",
+          "columns": [
+            "dispatch_key",
+            "reserved_at"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "acquisition_dispatch_operations_source_node_key_acquisition_nodes_node_key_fk": {
+          "name": "acquisition_dispatch_operations_source_node_key_acquisition_nodes_node_key_fk",
+          "tableFrom": "acquisition_dispatch_operations",
+          "tableTo": "acquisition_nodes",
+          "columnsFrom": [
+            "source_node_key"
+          ],
+          "columnsTo": [
+            "node_key"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_dispatch_operations_identity": {
+          "name": "fk_acquisition_dispatch_operations_identity",
+          "tableFrom": "acquisition_dispatch_operations",
+          "tableTo": "acquisition_dispatches",
+          "columnsFrom": [
+            "dispatch_key",
+            "lineage_key",
+            "logical_id"
+          ],
+          "columnsTo": [
+            "dispatch_key",
+            "lineage_key",
+            "logical_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_dispatch_operations_source_binding": {
+          "name": "fk_acquisition_dispatch_operations_source_binding",
+          "tableFrom": "acquisition_dispatch_operations",
+          "tableTo": "acquisition_nodes",
+          "columnsFrom": [
+            "source_node_key",
+            "lineage_key",
+            "source_generation"
+          ],
+          "columnsTo": [
+            "node_key",
+            "lineage_key",
+            "generation"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_dispatch_operations_logical_binding": {
+          "name": "fk_acquisition_dispatch_operations_logical_binding",
+          "tableFrom": "acquisition_dispatch_operations",
+          "tableTo": "acquisition_logical_ids",
+          "columnsFrom": [
+            "logical_id",
+            "lineage_key"
+          ],
+          "columnsTo": [
+            "logical_id",
+            "lineage_key"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_acquisition_dispatch_operations_kind": {
+          "name": "ck_acquisition_dispatch_operations_kind",
+          "value": "\"acquisition_dispatch_operations\".\"operation_kind\" IN ('dispatch', 'reconcile')"
+        },
+        "ck_acquisition_dispatch_operations_generation": {
+          "name": "ck_acquisition_dispatch_operations_generation",
+          "value": "\"acquisition_dispatch_operations\".\"source_generation\" >= 0"
+        },
+        "ck_acquisition_dispatch_operations_lifecycle": {
+          "name": "ck_acquisition_dispatch_operations_lifecycle",
+          "value": "\"acquisition_dispatch_operations\".\"reserved_at\" <= \"acquisition_dispatch_operations\".\"cleanup_after\""
+        },
+        "ck_acquisition_dispatch_operations_binding": {
+          "name": "ck_acquisition_dispatch_operations_binding",
+          "value": "length(\"acquisition_dispatch_operations\".\"candidate_fingerprint\") > 0 AND length(\"acquisition_dispatch_operations\".\"payload_snapshot_ref\") > 0 AND (\"acquisition_dispatch_operations\".\"authorization_observation_key\" IS NULL OR length(\"acquisition_dispatch_operations\".\"authorization_observation_key\") > 0)"
+        }
+      }
+    },
+    "acquisition_dispatches": {
+      "name": "acquisition_dispatches",
+      "columns": {
+        "dispatch_key": {
+          "name": "dispatch_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage_key": {
+          "name": "lineage_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "origin_node_key": {
+          "name": "origin_node_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "intent": {
+          "name": "intent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "logical_id": {
+          "name": "logical_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "origin_generation": {
+          "name": "origin_generation",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "destination_key": {
+          "name": "destination_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cleanup_after": {
+          "name": "cleanup_after",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "uq_acquisition_dispatches_intent_logical_id": {
+          "name": "uq_acquisition_dispatches_intent_logical_id",
+          "columns": [
+            "intent",
+            "logical_id"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_dispatches_idempotency_key": {
+          "name": "uq_acquisition_dispatches_idempotency_key",
+          "columns": [
+            "idempotency_key"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_dispatches_identity_binding": {
+          "name": "uq_acquisition_dispatches_identity_binding",
+          "columns": [
+            "dispatch_key",
+            "lineage_key",
+            "logical_id"
+          ],
+          "isUnique": true
+        },
+        "idx_acquisition_dispatches_cleanup_after": {
+          "name": "idx_acquisition_dispatches_cleanup_after",
+          "columns": [
+            "cleanup_after"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "acquisition_dispatches_lineage_key_acquisition_lineages_lineage_key_fk": {
+          "name": "acquisition_dispatches_lineage_key_acquisition_lineages_lineage_key_fk",
+          "tableFrom": "acquisition_dispatches",
+          "tableTo": "acquisition_lineages",
+          "columnsFrom": [
+            "lineage_key"
+          ],
+          "columnsTo": [
+            "lineage_key"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "acquisition_dispatches_origin_node_key_acquisition_nodes_node_key_fk": {
+          "name": "acquisition_dispatches_origin_node_key_acquisition_nodes_node_key_fk",
+          "tableFrom": "acquisition_dispatches",
+          "tableTo": "acquisition_nodes",
+          "columnsFrom": [
+            "origin_node_key"
+          ],
+          "columnsTo": [
+            "node_key"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_dispatches_logical_binding": {
+          "name": "fk_acquisition_dispatches_logical_binding",
+          "tableFrom": "acquisition_dispatches",
+          "tableTo": "acquisition_logical_ids",
+          "columnsFrom": [
+            "logical_id",
+            "lineage_key"
+          ],
+          "columnsTo": [
+            "logical_id",
+            "lineage_key"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_dispatches_origin_binding": {
+          "name": "fk_acquisition_dispatches_origin_binding",
+          "tableFrom": "acquisition_dispatches",
+          "tableTo": "acquisition_nodes",
+          "columnsFrom": [
+            "origin_node_key",
+            "lineage_key",
+            "origin_generation"
+          ],
+          "columnsTo": [
+            "node_key",
+            "lineage_key",
+            "generation"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_dispatches_intent_binding": {
+          "name": "fk_acquisition_dispatches_intent_binding",
+          "tableFrom": "acquisition_dispatches",
+          "tableTo": "acquisition_lineages",
+          "columnsFrom": [
+            "lineage_key",
+            "intent"
+          ],
+          "columnsTo": [
+            "lineage_key",
+            "intent"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_acquisition_dispatches_generation": {
+          "name": "ck_acquisition_dispatches_generation",
+          "value": "\"acquisition_dispatches\".\"origin_generation\" >= 0"
+        },
+        "ck_acquisition_dispatches_intent": {
+          "name": "ck_acquisition_dispatches_intent",
+          "value": "\"acquisition_dispatches\".\"intent\" IN ('poc', 'sales', 'demo', 'partner')"
+        },
+        "ck_acquisition_dispatches_lifecycle": {
+          "name": "ck_acquisition_dispatches_lifecycle",
+          "value": "\"acquisition_dispatches\".\"created_at\" <= \"acquisition_dispatches\".\"cleanup_after\""
+        },
+        "ck_acquisition_dispatches_idempotency": {
+          "name": "ck_acquisition_dispatches_idempotency",
+          "value": "\"acquisition_dispatches\".\"idempotency_key\" = \"acquisition_dispatches\".\"logical_id\""
+        }
+      }
+    },
+    "acquisition_lineages": {
+      "name": "acquisition_lineages",
+      "columns": {
+        "lineage_key": {
+          "name": "lineage_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_digest": {
+          "name": "session_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "intent": {
+          "name": "intent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "canonical_route": {
+          "name": "canonical_route",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "post_action": {
+          "name": "post_action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "root_logical_id": {
+          "name": "root_logical_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cleanup_after": {
+          "name": "cleanup_after",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "uq_acquisition_lineages_root_logical_id": {
+          "name": "uq_acquisition_lineages_root_logical_id",
+          "columns": [
+            "root_logical_id"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_lineages_binding": {
+          "name": "uq_acquisition_lineages_binding",
+          "columns": [
+            "lineage_key",
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_lineages_intent_binding": {
+          "name": "uq_acquisition_lineages_intent_binding",
+          "columns": [
+            "lineage_key",
+            "intent"
+          ],
+          "isUnique": true
+        },
+        "idx_acquisition_lineages_cleanup_after": {
+          "name": "idx_acquisition_lineages_cleanup_after",
+          "columns": [
+            "cleanup_after"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_acquisition_lineages_revision": {
+          "name": "ck_acquisition_lineages_revision",
+          "value": "\"acquisition_lineages\".\"revision\" >= 0"
+        },
+        "ck_acquisition_lineages_intent": {
+          "name": "ck_acquisition_lineages_intent",
+          "value": "\"acquisition_lineages\".\"intent\" IN ('poc', 'sales', 'demo', 'partner')"
+        },
+        "ck_acquisition_lineages_route_action": {
+          "name": "ck_acquisition_lineages_route_action",
+          "value": "(\"acquisition_lineages\".\"intent\" = 'poc' AND \"acquisition_lineages\".\"canonical_route\" = '/request-poc/' AND \"acquisition_lineages\".\"post_action\" = '/request-poc/') OR (\"acquisition_lineages\".\"intent\" = 'sales' AND \"acquisition_lineages\".\"canonical_route\" = '/contact-sales/' AND \"acquisition_lineages\".\"post_action\" = '/contact-sales/') OR (\"acquisition_lineages\".\"intent\" = 'demo' AND \"acquisition_lineages\".\"canonical_route\" = '/request-demo/' AND \"acquisition_lineages\".\"post_action\" = '/request-demo/') OR (\"acquisition_lineages\".\"intent\" = 'partner' AND \"acquisition_lineages\".\"canonical_route\" = '/partners/apply/' AND \"acquisition_lineages\".\"post_action\" = '/partners/apply/')"
+        },
+        "ck_acquisition_lineages_lifecycle": {
+          "name": "ck_acquisition_lineages_lifecycle",
+          "value": "\"acquisition_lineages\".\"created_at\" <= \"acquisition_lineages\".\"expires_at\" AND \"acquisition_lineages\".\"expires_at\" <= \"acquisition_lineages\".\"cleanup_after\""
+        }
+      }
+    },
+    "acquisition_logical_ids": {
+      "name": "acquisition_logical_ids",
+      "columns": {
+        "logical_id": {
+          "name": "logical_id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage_key": {
+          "name": "lineage_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parent_logical_id": {
+          "name": "parent_logical_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cleanup_after": {
+          "name": "cleanup_after",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_acquisition_logical_ids_lineage": {
+          "name": "idx_acquisition_logical_ids_lineage",
+          "columns": [
+            "lineage_key"
+          ],
+          "isUnique": false
+        },
+        "uq_acquisition_logical_ids_lineage_binding": {
+          "name": "uq_acquisition_logical_ids_lineage_binding",
+          "columns": [
+            "logical_id",
+            "lineage_key"
+          ],
+          "isUnique": true
+        },
+        "idx_acquisition_logical_ids_cleanup_after": {
+          "name": "idx_acquisition_logical_ids_cleanup_after",
+          "columns": [
+            "cleanup_after"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "acquisition_logical_ids_lineage_key_acquisition_lineages_lineage_key_fk": {
+          "name": "acquisition_logical_ids_lineage_key_acquisition_lineages_lineage_key_fk",
+          "tableFrom": "acquisition_logical_ids",
+          "tableTo": "acquisition_lineages",
+          "columnsFrom": [
+            "lineage_key"
+          ],
+          "columnsTo": [
+            "lineage_key"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_logical_ids_parent": {
+          "name": "fk_acquisition_logical_ids_parent",
+          "tableFrom": "acquisition_logical_ids",
+          "tableTo": "acquisition_logical_ids",
+          "columnsFrom": [
+            "parent_logical_id",
+            "lineage_key"
+          ],
+          "columnsTo": [
+            "logical_id",
+            "lineage_key"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_acquisition_logical_ids_lifecycle": {
+          "name": "ck_acquisition_logical_ids_lifecycle",
+          "value": "\"acquisition_logical_ids\".\"created_at\" <= \"acquisition_logical_ids\".\"cleanup_after\""
+        }
+      }
+    },
+    "acquisition_nodes": {
+      "name": "acquisition_nodes",
+      "columns": {
+        "node_key": {
+          "name": "node_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage_key": {
+          "name": "lineage_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "parent_node_key": {
+          "name": "parent_node_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "logical_id": {
+          "name": "logical_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "generation": {
+          "name": "generation",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_kind": {
+          "name": "source_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'initial'"
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'fresh'"
+        },
+        "bound_payload_fingerprint": {
+          "name": "bound_payload_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "selected_candidate_fingerprint": {
+          "name": "selected_candidate_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "selected_payload_snapshot_ref": {
+          "name": "selected_payload_snapshot_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "selected_logical_id": {
+          "name": "selected_logical_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "selected_node_key": {
+          "name": "selected_node_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "result_set_key": {
+          "name": "result_set_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "selection_key": {
+          "name": "selection_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "finalization_key": {
+          "name": "finalization_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "selection_kind": {
+          "name": "selection_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cleanup_after": {
+          "name": "cleanup_after",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "uq_acquisition_nodes_lineage_generation": {
+          "name": "uq_acquisition_nodes_lineage_generation",
+          "columns": [
+            "lineage_key",
+            "generation"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_nodes_full_binding": {
+          "name": "uq_acquisition_nodes_full_binding",
+          "columns": [
+            "node_key",
+            "lineage_key",
+            "logical_id",
+            "generation"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_nodes_lineage_binding": {
+          "name": "uq_acquisition_nodes_lineage_binding",
+          "columns": [
+            "node_key",
+            "lineage_key",
+            "generation"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_nodes_parent_binding": {
+          "name": "uq_acquisition_nodes_parent_binding",
+          "columns": [
+            "node_key",
+            "lineage_key"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_nodes_finalization_key": {
+          "name": "uq_acquisition_nodes_finalization_key",
+          "columns": [
+            "finalization_key"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_nodes_selection_key": {
+          "name": "uq_acquisition_nodes_selection_key",
+          "columns": [
+            "selection_key"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_nodes_result_set_key": {
+          "name": "uq_acquisition_nodes_result_set_key",
+          "columns": [
+            "result_set_key"
+          ],
+          "isUnique": true
+        },
+        "idx_acquisition_nodes_lineage_parent": {
+          "name": "idx_acquisition_nodes_lineage_parent",
+          "columns": [
+            "lineage_key",
+            "parent_node_key"
+          ],
+          "isUnique": false
+        },
+        "idx_acquisition_nodes_outcome_updated": {
+          "name": "idx_acquisition_nodes_outcome_updated",
+          "columns": [
+            "outcome",
+            "updated_at"
+          ],
+          "isUnique": false
+        },
+        "idx_acquisition_nodes_cleanup_after": {
+          "name": "idx_acquisition_nodes_cleanup_after",
+          "columns": [
+            "cleanup_after"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "acquisition_nodes_lineage_key_acquisition_lineages_lineage_key_fk": {
+          "name": "acquisition_nodes_lineage_key_acquisition_lineages_lineage_key_fk",
+          "tableFrom": "acquisition_nodes",
+          "tableTo": "acquisition_lineages",
+          "columnsFrom": [
+            "lineage_key"
+          ],
+          "columnsTo": [
+            "lineage_key"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "acquisition_nodes_logical_id_acquisition_logical_ids_logical_id_fk": {
+          "name": "acquisition_nodes_logical_id_acquisition_logical_ids_logical_id_fk",
+          "tableFrom": "acquisition_nodes",
+          "tableTo": "acquisition_logical_ids",
+          "columnsFrom": [
+            "logical_id"
+          ],
+          "columnsTo": [
+            "logical_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "acquisition_nodes_result_set_key_acquisition_result_sets_result_set_key_fk": {
+          "name": "acquisition_nodes_result_set_key_acquisition_result_sets_result_set_key_fk",
+          "tableFrom": "acquisition_nodes",
+          "tableTo": "acquisition_result_sets",
+          "columnsFrom": [
+            "result_set_key"
+          ],
+          "columnsTo": [
+            "result_set_key"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_nodes_parent": {
+          "name": "fk_acquisition_nodes_parent",
+          "tableFrom": "acquisition_nodes",
+          "tableTo": "acquisition_nodes",
+          "columnsFrom": [
+            "parent_node_key",
+            "lineage_key"
+          ],
+          "columnsTo": [
+            "node_key",
+            "lineage_key"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_nodes_logical_binding": {
+          "name": "fk_acquisition_nodes_logical_binding",
+          "tableFrom": "acquisition_nodes",
+          "tableTo": "acquisition_logical_ids",
+          "columnsFrom": [
+            "logical_id",
+            "lineage_key"
+          ],
+          "columnsTo": [
+            "logical_id",
+            "lineage_key"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_nodes_selected_logical_id": {
+          "name": "fk_acquisition_nodes_selected_logical_id",
+          "tableFrom": "acquisition_nodes",
+          "tableTo": "acquisition_logical_ids",
+          "columnsFrom": [
+            "selected_logical_id",
+            "lineage_key"
+          ],
+          "columnsTo": [
+            "logical_id",
+            "lineage_key"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_nodes_selected_node": {
+          "name": "fk_acquisition_nodes_selected_node",
+          "tableFrom": "acquisition_nodes",
+          "tableTo": "acquisition_nodes",
+          "columnsFrom": [
+            "selected_node_key",
+            "lineage_key"
+          ],
+          "columnsTo": [
+            "node_key",
+            "lineage_key"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_acquisition_nodes_generation": {
+          "name": "ck_acquisition_nodes_generation",
+          "value": "\"acquisition_nodes\".\"generation\" >= 0"
+        },
+        "ck_acquisition_nodes_revision": {
+          "name": "ck_acquisition_nodes_revision",
+          "value": "\"acquisition_nodes\".\"revision\" >= 0"
+        },
+        "ck_acquisition_nodes_selection_key": {
+          "name": "ck_acquisition_nodes_selection_key",
+          "value": "\"acquisition_nodes\".\"selection_key\" IS NULL OR length(\"acquisition_nodes\".\"selection_key\") > 0"
+        },
+        "ck_acquisition_nodes_finalization_key": {
+          "name": "ck_acquisition_nodes_finalization_key",
+          "value": "\"acquisition_nodes\".\"finalization_key\" IS NULL OR length(\"acquisition_nodes\".\"finalization_key\") > 0"
+        },
+        "ck_acquisition_nodes_source_kind": {
+          "name": "ck_acquisition_nodes_source_kind",
+          "value": "\"acquisition_nodes\".\"source_kind\" IN ('initial', 'validation', 'backend_failure', 'unknown', 'possible_duplicate')"
+        },
+        "ck_acquisition_nodes_source_binding": {
+          "name": "ck_acquisition_nodes_source_binding",
+          "value": "((\"acquisition_nodes\".\"source_kind\" IN ('initial', 'validation')) AND \"acquisition_nodes\".\"bound_payload_fingerprint\" IS NULL) OR ((\"acquisition_nodes\".\"source_kind\" IN ('backend_failure', 'unknown', 'possible_duplicate')) AND \"acquisition_nodes\".\"bound_payload_fingerprint\" IS NOT NULL AND length(\"acquisition_nodes\".\"bound_payload_fingerprint\") > 0)"
+        },
+        "ck_acquisition_nodes_outcome": {
+          "name": "ck_acquisition_nodes_outcome",
+          "value": "\"acquisition_nodes\".\"outcome\" IN ('fresh', 'validation_failed', 'ready', 'recorded', 'not_recorded', 'indeterminate')"
+        },
+        "ck_acquisition_nodes_selection_kind": {
+          "name": "ck_acquisition_nodes_selection_kind",
+          "value": "\"acquisition_nodes\".\"selection_kind\" IS NULL OR \"acquisition_nodes\".\"selection_kind\" IN ('parent', 'child')"
+        },
+        "ck_acquisition_nodes_selection_shape": {
+          "name": "ck_acquisition_nodes_selection_shape",
+          "value": "(\"acquisition_nodes\".\"selection_kind\" IS NULL AND \"acquisition_nodes\".\"selected_candidate_fingerprint\" IS NULL AND \"acquisition_nodes\".\"selected_payload_snapshot_ref\" IS NULL AND \"acquisition_nodes\".\"selected_logical_id\" IS NULL) OR (\"acquisition_nodes\".\"selection_kind\" IS NOT NULL AND \"acquisition_nodes\".\"selected_candidate_fingerprint\" IS NOT NULL AND length(\"acquisition_nodes\".\"selected_candidate_fingerprint\") > 0 AND \"acquisition_nodes\".\"selected_payload_snapshot_ref\" IS NOT NULL AND length(\"acquisition_nodes\".\"selected_payload_snapshot_ref\") > 0 AND \"acquisition_nodes\".\"selected_logical_id\" IS NOT NULL AND ((\"acquisition_nodes\".\"selection_kind\" = 'parent' AND \"acquisition_nodes\".\"selected_logical_id\" = \"acquisition_nodes\".\"logical_id\") OR (\"acquisition_nodes\".\"selection_kind\" = 'child' AND \"acquisition_nodes\".\"selected_logical_id\" <> \"acquisition_nodes\".\"logical_id\")))"
+        },
+        "ck_acquisition_nodes_selection_phase": {
+          "name": "ck_acquisition_nodes_selection_phase",
+          "value": "(\"acquisition_nodes\".\"outcome\" = 'fresh' AND \"acquisition_nodes\".\"selection_kind\" IS NULL) OR (\"acquisition_nodes\".\"outcome\" <> 'fresh' AND \"acquisition_nodes\".\"selection_kind\" IS NOT NULL)"
+        },
+        "ck_acquisition_nodes_result_set": {
+          "name": "ck_acquisition_nodes_result_set",
+          "value": "(\"acquisition_nodes\".\"outcome\" IN ('fresh', 'ready') AND \"acquisition_nodes\".\"result_set_key\" IS NULL) OR (\"acquisition_nodes\".\"outcome\" IN ('validation_failed', 'recorded', 'not_recorded', 'indeterminate') AND \"acquisition_nodes\".\"result_set_key\" IS NOT NULL AND length(\"acquisition_nodes\".\"result_set_key\") > 0)"
+        },
+        "ck_acquisition_nodes_lifecycle": {
+          "name": "ck_acquisition_nodes_lifecycle",
+          "value": "\"acquisition_nodes\".\"created_at\" <= \"acquisition_nodes\".\"updated_at\" AND \"acquisition_nodes\".\"updated_at\" <= \"acquisition_nodes\".\"cleanup_after\" AND \"acquisition_nodes\".\"expires_at\" <= \"acquisition_nodes\".\"cleanup_after\""
+        }
+      }
+    },
+    "acquisition_result_authorizations": {
+      "name": "acquisition_result_authorizations",
+      "columns": {
+        "handle_digest": {
+          "name": "handle_digest",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_digest": {
+          "name": "session_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "intent": {
+          "name": "intent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "canonical_route": {
+          "name": "canonical_route",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "post_action": {
+          "name": "post_action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "logical_id": {
+          "name": "logical_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "generation": {
+          "name": "generation",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "representation": {
+          "name": "representation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "public_state": {
+          "name": "public_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "source_kind": {
+          "name": "source_kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "proof_class": {
+          "name": "proof_class",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "result_set_key": {
+          "name": "result_set_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "return_handle_digest": {
+          "name": "return_handle_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "delivery_proof_digest": {
+          "name": "delivery_proof_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "operation_key": {
+          "name": "operation_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "observation_key": {
+          "name": "observation_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "issued_at": {
+          "name": "issued_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cleanup_after": {
+          "name": "cleanup_after",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "attestation_version": {
+          "name": "attestation_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "attestation_key_id": {
+          "name": "attestation_key_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "authorization_attestation": {
+          "name": "authorization_attestation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_acquisition_result_authorizations_binding": {
+          "name": "idx_acquisition_result_authorizations_binding",
+          "columns": [
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action",
+            "logical_id",
+            "generation"
+          ],
+          "isUnique": false
+        },
+        "idx_acquisition_result_authorizations_cleanup_after": {
+          "name": "idx_acquisition_result_authorizations_cleanup_after",
+          "columns": [
+            "cleanup_after"
+          ],
+          "isUnique": false
+        },
+        "uq_acquisition_result_authorizations_state_binding": {
+          "name": "uq_acquisition_result_authorizations_state_binding",
+          "columns": [
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action",
+            "logical_id",
+            "generation",
+            "public_state"
+          ],
+          "isUnique": true,
+          "where": "\"acquisition_result_authorizations\".\"public_state\" = 'expired'"
+        }
+      },
+      "foreignKeys": {
+        "acquisition_result_authorizations_handle_digest_acquisition_result_handles_handle_digest_fk": {
+          "name": "acquisition_result_authorizations_handle_digest_acquisition_result_handles_handle_digest_fk",
+          "tableFrom": "acquisition_result_authorizations",
+          "tableTo": "acquisition_result_handles",
+          "columnsFrom": [
+            "handle_digest"
+          ],
+          "columnsTo": [
+            "handle_digest"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_result_authorizations_result_set_binding": {
+          "name": "fk_acquisition_result_authorizations_result_set_binding",
+          "tableFrom": "acquisition_result_authorizations",
+          "tableTo": "acquisition_result_sets",
+          "columnsFrom": [
+            "result_set_key",
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action",
+            "logical_id",
+            "generation"
+          ],
+          "columnsTo": [
+            "result_set_key",
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action",
+            "logical_id",
+            "generation"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_result_authorizations_delivery_proof": {
+          "name": "fk_acquisition_result_authorizations_delivery_proof",
+          "tableFrom": "acquisition_result_authorizations",
+          "tableTo": "acquisition_dispatch_observations",
+          "columnsFrom": [
+            "observation_key",
+            "operation_key"
+          ],
+          "columnsTo": [
+            "observation_key",
+            "operation_key"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_acquisition_result_authorizations_generation": {
+          "name": "ck_acquisition_result_authorizations_generation",
+          "value": "\"acquisition_result_authorizations\".\"generation\" >= 0"
+        },
+        "ck_acquisition_result_authorizations_route_action": {
+          "name": "ck_acquisition_result_authorizations_route_action",
+          "value": "(\"acquisition_result_authorizations\".\"intent\" = 'poc' AND \"acquisition_result_authorizations\".\"canonical_route\" = '/request-poc/' AND \"acquisition_result_authorizations\".\"post_action\" = '/request-poc/') OR (\"acquisition_result_authorizations\".\"intent\" = 'sales' AND \"acquisition_result_authorizations\".\"canonical_route\" = '/contact-sales/' AND \"acquisition_result_authorizations\".\"post_action\" = '/contact-sales/') OR (\"acquisition_result_authorizations\".\"intent\" = 'demo' AND \"acquisition_result_authorizations\".\"canonical_route\" = '/request-demo/' AND \"acquisition_result_authorizations\".\"post_action\" = '/request-demo/') OR (\"acquisition_result_authorizations\".\"intent\" = 'partner' AND \"acquisition_result_authorizations\".\"canonical_route\" = '/partners/apply/' AND \"acquisition_result_authorizations\".\"post_action\" = '/partners/apply/')"
+        },
+        "ck_acquisition_result_authorizations_shape": {
+          "name": "ck_acquisition_result_authorizations_shape",
+          "value": "(\"acquisition_result_authorizations\".\"public_state\" = 'validation' AND \"acquisition_result_authorizations\".\"proof_class\" = 'validation' AND \"acquisition_result_authorizations\".\"source_kind\" = 'validation' AND \"acquisition_result_authorizations\".\"operation_key\" IS NULL AND \"acquisition_result_authorizations\".\"observation_key\" IS NULL AND \"acquisition_result_authorizations\".\"delivery_proof_digest\" IS NULL) OR (\"acquisition_result_authorizations\".\"public_state\" = 'backend_failure' AND \"acquisition_result_authorizations\".\"proof_class\" = 'not_recorded' AND \"acquisition_result_authorizations\".\"source_kind\" = 'backend_failure' AND \"acquisition_result_authorizations\".\"operation_key\" IS NOT NULL AND \"acquisition_result_authorizations\".\"observation_key\" IS NOT NULL AND \"acquisition_result_authorizations\".\"delivery_proof_digest\" IS NOT NULL) OR (\"acquisition_result_authorizations\".\"public_state\" IN ('return_form', 'unknown') AND \"acquisition_result_authorizations\".\"proof_class\" = 'indeterminate_dispatch' AND \"acquisition_result_authorizations\".\"source_kind\" = 'unknown' AND \"acquisition_result_authorizations\".\"operation_key\" IS NOT NULL AND \"acquisition_result_authorizations\".\"observation_key\" IS NOT NULL AND \"acquisition_result_authorizations\".\"delivery_proof_digest\" IS NOT NULL) OR (\"acquisition_result_authorizations\".\"public_state\" IN ('return_form', 'possible_duplicate') AND \"acquisition_result_authorizations\".\"proof_class\" = 'indeterminate_reconcile' AND \"acquisition_result_authorizations\".\"source_kind\" = 'possible_duplicate' AND \"acquisition_result_authorizations\".\"operation_key\" IS NOT NULL AND \"acquisition_result_authorizations\".\"observation_key\" IS NOT NULL AND \"acquisition_result_authorizations\".\"delivery_proof_digest\" IS NOT NULL) OR (\"acquisition_result_authorizations\".\"public_state\" = 'receipt' AND \"acquisition_result_authorizations\".\"proof_class\" = 'recorded' AND \"acquisition_result_authorizations\".\"source_kind\" IS NOT NULL AND \"acquisition_result_authorizations\".\"operation_key\" IS NOT NULL AND \"acquisition_result_authorizations\".\"observation_key\" IS NOT NULL AND \"acquisition_result_authorizations\".\"delivery_proof_digest\" IS NOT NULL) OR (\"acquisition_result_authorizations\".\"public_state\" = 'expired' AND \"acquisition_result_authorizations\".\"proof_class\" = 'exact_expiry' AND \"acquisition_result_authorizations\".\"source_kind\" IS NULL AND \"acquisition_result_authorizations\".\"operation_key\" IS NULL AND \"acquisition_result_authorizations\".\"observation_key\" IS NULL AND \"acquisition_result_authorizations\".\"delivery_proof_digest\" IS NULL)"
+        },
+        "ck_acquisition_result_authorizations_representation_state": {
+          "name": "ck_acquisition_result_authorizations_representation_state",
+          "value": "(\"acquisition_result_authorizations\".\"representation\" = 'returned_form' AND \"acquisition_result_authorizations\".\"public_state\" IN ('validation', 'backend_failure', 'return_form')) OR (\"acquisition_result_authorizations\".\"representation\" = 'reduced' AND \"acquisition_result_authorizations\".\"public_state\" IN ('unknown', 'possible_duplicate', 'expired', 'receipt'))"
+        },
+        "ck_acquisition_result_authorizations_return_target": {
+          "name": "ck_acquisition_result_authorizations_return_target",
+          "value": "(\"acquisition_result_authorizations\".\"public_state\" IN ('unknown', 'possible_duplicate') AND \"acquisition_result_authorizations\".\"return_handle_digest\" IS NOT NULL) OR (\"acquisition_result_authorizations\".\"public_state\" NOT IN ('unknown', 'possible_duplicate') AND \"acquisition_result_authorizations\".\"return_handle_digest\" IS NULL)"
+        },
+        "ck_acquisition_result_authorizations_lifecycle": {
+          "name": "ck_acquisition_result_authorizations_lifecycle",
+          "value": "\"acquisition_result_authorizations\".\"issued_at\" <= \"acquisition_result_authorizations\".\"expires_at\" AND \"acquisition_result_authorizations\".\"expires_at\" <= \"acquisition_result_authorizations\".\"cleanup_after\""
+        },
+        "ck_acquisition_result_authorizations_attestation": {
+          "name": "ck_acquisition_result_authorizations_attestation",
+          "value": "\"acquisition_result_authorizations\".\"attestation_version\" = 1 AND length(\"acquisition_result_authorizations\".\"attestation_key_id\") > 0 AND length(\"acquisition_result_authorizations\".\"authorization_attestation\") > 0 AND length(\"acquisition_result_authorizations\".\"result_set_key\") > 0"
+        }
+      }
+    },
+    "acquisition_result_handles": {
+      "name": "acquisition_result_handles",
+      "columns": {
+        "handle_digest": {
+          "name": "handle_digest",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "lineage_key": {
+          "name": "lineage_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "node_key": {
+          "name": "node_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "session_digest": {
+          "name": "session_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "intent": {
+          "name": "intent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "canonical_route": {
+          "name": "canonical_route",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "post_action": {
+          "name": "post_action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "logical_id": {
+          "name": "logical_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "generation": {
+          "name": "generation",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "representation": {
+          "name": "representation",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "public_state": {
+          "name": "public_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "return_handle_digest": {
+          "name": "return_handle_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "payload_fingerprint": {
+          "name": "payload_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "result_set_key": {
+          "name": "result_set_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "issued_at": {
+          "name": "issued_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cleanup_after": {
+          "name": "cleanup_after",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "idx_acquisition_handles_node": {
+          "name": "idx_acquisition_handles_node",
+          "columns": [
+            "node_key"
+          ],
+          "isUnique": false
+        },
+        "idx_acquisition_handles_cleanup_after": {
+          "name": "idx_acquisition_handles_cleanup_after",
+          "columns": [
+            "cleanup_after"
+          ],
+          "isUnique": false
+        },
+        "uq_acquisition_handles_full_binding": {
+          "name": "uq_acquisition_handles_full_binding",
+          "columns": [
+            "handle_digest",
+            "lineage_key",
+            "node_key",
+            "logical_id",
+            "generation"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_handles_expired_binding": {
+          "name": "uq_acquisition_handles_expired_binding",
+          "columns": [
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action",
+            "logical_id",
+            "generation",
+            "public_state"
+          ],
+          "isUnique": true,
+          "where": "\"acquisition_result_handles\".\"public_state\" = 'expired'"
+        }
+      },
+      "foreignKeys": {
+        "acquisition_result_handles_lineage_key_acquisition_lineages_lineage_key_fk": {
+          "name": "acquisition_result_handles_lineage_key_acquisition_lineages_lineage_key_fk",
+          "tableFrom": "acquisition_result_handles",
+          "tableTo": "acquisition_lineages",
+          "columnsFrom": [
+            "lineage_key"
+          ],
+          "columnsTo": [
+            "lineage_key"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "acquisition_result_handles_node_key_acquisition_nodes_node_key_fk": {
+          "name": "acquisition_result_handles_node_key_acquisition_nodes_node_key_fk",
+          "tableFrom": "acquisition_result_handles",
+          "tableTo": "acquisition_nodes",
+          "columnsFrom": [
+            "node_key"
+          ],
+          "columnsTo": [
+            "node_key"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_handles_node_binding": {
+          "name": "fk_acquisition_handles_node_binding",
+          "tableFrom": "acquisition_result_handles",
+          "tableTo": "acquisition_nodes",
+          "columnsFrom": [
+            "node_key",
+            "lineage_key",
+            "logical_id",
+            "generation"
+          ],
+          "columnsTo": [
+            "node_key",
+            "lineage_key",
+            "logical_id",
+            "generation"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_handles_lineage_binding": {
+          "name": "fk_acquisition_handles_lineage_binding",
+          "tableFrom": "acquisition_result_handles",
+          "tableTo": "acquisition_lineages",
+          "columnsFrom": [
+            "lineage_key",
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action"
+          ],
+          "columnsTo": [
+            "lineage_key",
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_handles_result_set_binding": {
+          "name": "fk_acquisition_handles_result_set_binding",
+          "tableFrom": "acquisition_result_handles",
+          "tableTo": "acquisition_result_sets",
+          "columnsFrom": [
+            "result_set_key",
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action",
+            "logical_id",
+            "generation"
+          ],
+          "columnsTo": [
+            "result_set_key",
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action",
+            "logical_id",
+            "generation"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fk_acquisition_handles_return_handle": {
+          "name": "fk_acquisition_handles_return_handle",
+          "tableFrom": "acquisition_result_handles",
+          "tableTo": "acquisition_result_handles",
+          "columnsFrom": [
+            "return_handle_digest",
+            "lineage_key",
+            "node_key",
+            "logical_id",
+            "generation"
+          ],
+          "columnsTo": [
+            "handle_digest",
+            "lineage_key",
+            "node_key",
+            "logical_id",
+            "generation"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_acquisition_handles_generation": {
+          "name": "ck_acquisition_handles_generation",
+          "value": "\"acquisition_result_handles\".\"generation\" >= 0"
+        },
+        "ck_acquisition_handles_intent": {
+          "name": "ck_acquisition_handles_intent",
+          "value": "\"acquisition_result_handles\".\"intent\" IN ('poc', 'sales', 'demo', 'partner')"
+        },
+        "ck_acquisition_handles_route_action": {
+          "name": "ck_acquisition_handles_route_action",
+          "value": "(\"acquisition_result_handles\".\"intent\" = 'poc' AND \"acquisition_result_handles\".\"canonical_route\" = '/request-poc/' AND \"acquisition_result_handles\".\"post_action\" = '/request-poc/') OR (\"acquisition_result_handles\".\"intent\" = 'sales' AND \"acquisition_result_handles\".\"canonical_route\" = '/contact-sales/' AND \"acquisition_result_handles\".\"post_action\" = '/contact-sales/') OR (\"acquisition_result_handles\".\"intent\" = 'demo' AND \"acquisition_result_handles\".\"canonical_route\" = '/request-demo/' AND \"acquisition_result_handles\".\"post_action\" = '/request-demo/') OR (\"acquisition_result_handles\".\"intent\" = 'partner' AND \"acquisition_result_handles\".\"canonical_route\" = '/partners/apply/' AND \"acquisition_result_handles\".\"post_action\" = '/partners/apply/')"
+        },
+        "ck_acquisition_handles_representation": {
+          "name": "ck_acquisition_handles_representation",
+          "value": "\"acquisition_result_handles\".\"representation\" IN ('returned_form', 'reduced')"
+        },
+        "ck_acquisition_handles_representation_state": {
+          "name": "ck_acquisition_handles_representation_state",
+          "value": "(\"acquisition_result_handles\".\"representation\" = 'returned_form' AND \"acquisition_result_handles\".\"public_state\" IN ('validation', 'backend_failure', 'return_form')) OR (\"acquisition_result_handles\".\"representation\" = 'reduced' AND \"acquisition_result_handles\".\"public_state\" IN ('unknown', 'possible_duplicate', 'expired', 'receipt'))"
+        },
+        "ck_acquisition_handles_public_state": {
+          "name": "ck_acquisition_handles_public_state",
+          "value": "\"acquisition_result_handles\".\"public_state\" IN ('validation', 'backend_failure', 'return_form', 'unknown', 'possible_duplicate', 'expired', 'receipt')"
+        },
+        "ck_acquisition_handles_uncertainty_return": {
+          "name": "ck_acquisition_handles_uncertainty_return",
+          "value": "(\"acquisition_result_handles\".\"public_state\" IN ('unknown', 'possible_duplicate') AND \"acquisition_result_handles\".\"return_handle_digest\" IS NOT NULL) OR (\"acquisition_result_handles\".\"public_state\" NOT IN ('unknown', 'possible_duplicate') AND \"acquisition_result_handles\".\"return_handle_digest\" IS NULL)"
+        },
+        "ck_acquisition_handles_lifecycle": {
+          "name": "ck_acquisition_handles_lifecycle",
+          "value": "\"acquisition_result_handles\".\"issued_at\" <= \"acquisition_result_handles\".\"expires_at\" AND \"acquisition_result_handles\".\"expires_at\" <= \"acquisition_result_handles\".\"cleanup_after\""
+        },
+        "ck_acquisition_handles_expiry_only": {
+          "name": "ck_acquisition_handles_expiry_only",
+          "value": "\"acquisition_result_handles\".\"public_state\" <> 'expired' OR (\"acquisition_result_handles\".\"lineage_key\" IS NULL AND \"acquisition_result_handles\".\"node_key\" IS NULL AND \"acquisition_result_handles\".\"payload_fingerprint\" IS NULL)"
+        },
+        "ck_acquisition_handles_state_binding": {
+          "name": "ck_acquisition_handles_state_binding",
+          "value": "(\"acquisition_result_handles\".\"public_state\" IN ('validation', 'backend_failure', 'return_form', 'unknown', 'possible_duplicate') AND \"acquisition_result_handles\".\"lineage_key\" IS NOT NULL AND \"acquisition_result_handles\".\"node_key\" IS NOT NULL AND \"acquisition_result_handles\".\"payload_fingerprint\" IS NOT NULL AND length(\"acquisition_result_handles\".\"payload_fingerprint\") > 0) OR (\"acquisition_result_handles\".\"public_state\" = 'receipt' AND \"acquisition_result_handles\".\"lineage_key\" IS NOT NULL AND \"acquisition_result_handles\".\"node_key\" IS NOT NULL AND \"acquisition_result_handles\".\"payload_fingerprint\" IS NULL) OR (\"acquisition_result_handles\".\"public_state\" = 'expired' AND \"acquisition_result_handles\".\"lineage_key\" IS NULL AND \"acquisition_result_handles\".\"node_key\" IS NULL AND \"acquisition_result_handles\".\"payload_fingerprint\" IS NULL)"
+        },
+        "ck_acquisition_handles_result_set": {
+          "name": "ck_acquisition_handles_result_set",
+          "value": "length(\"acquisition_result_handles\".\"result_set_key\") > 0"
+        }
+      }
+    },
+    "acquisition_result_sets": {
+      "name": "acquisition_result_sets",
+      "columns": {
+        "result_set_key": {
+          "name": "result_set_key",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "session_digest": {
+          "name": "session_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "intent": {
+          "name": "intent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "canonical_route": {
+          "name": "canonical_route",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "post_action": {
+          "name": "post_action",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "logical_id": {
+          "name": "logical_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "generation": {
+          "name": "generation",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "outcome": {
+          "name": "outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "cleanup_after": {
+          "name": "cleanup_after",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "uq_acquisition_result_sets_full_binding": {
+          "name": "uq_acquisition_result_sets_full_binding",
+          "columns": [
+            "result_set_key",
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action",
+            "logical_id",
+            "generation"
+          ],
+          "isUnique": true
+        },
+        "uq_acquisition_result_sets_expired_binding": {
+          "name": "uq_acquisition_result_sets_expired_binding",
+          "columns": [
+            "session_digest",
+            "intent",
+            "canonical_route",
+            "post_action",
+            "logical_id",
+            "generation",
+            "outcome"
+          ],
+          "isUnique": true,
+          "where": "\"acquisition_result_sets\".\"outcome\" = 'expired'"
+        },
+        "idx_acquisition_result_sets_cleanup_after": {
+          "name": "idx_acquisition_result_sets_cleanup_after",
+          "columns": [
+            "cleanup_after"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "ck_acquisition_result_sets_route_action": {
+          "name": "ck_acquisition_result_sets_route_action",
+          "value": "(\"acquisition_result_sets\".\"intent\" = 'poc' AND \"acquisition_result_sets\".\"canonical_route\" = '/request-poc/' AND \"acquisition_result_sets\".\"post_action\" = '/request-poc/') OR (\"acquisition_result_sets\".\"intent\" = 'sales' AND \"acquisition_result_sets\".\"canonical_route\" = '/contact-sales/' AND \"acquisition_result_sets\".\"post_action\" = '/contact-sales/') OR (\"acquisition_result_sets\".\"intent\" = 'demo' AND \"acquisition_result_sets\".\"canonical_route\" = '/request-demo/' AND \"acquisition_result_sets\".\"post_action\" = '/request-demo/') OR (\"acquisition_result_sets\".\"intent\" = 'partner' AND \"acquisition_result_sets\".\"canonical_route\" = '/partners/apply/' AND \"acquisition_result_sets\".\"post_action\" = '/partners/apply/')"
+        },
+        "ck_acquisition_result_sets_shape": {
+          "name": "ck_acquisition_result_sets_shape",
+          "value": "length(\"acquisition_result_sets\".\"result_set_key\") > 0 AND \"acquisition_result_sets\".\"generation\" >= 0 AND \"acquisition_result_sets\".\"outcome\" IN ('validation', 'backend_failure', 'unknown', 'possible_duplicate', 'receipt', 'expired')"
+        },
+        "ck_acquisition_result_sets_lifecycle": {
+          "name": "ck_acquisition_result_sets_lifecycle",
+          "value": "\"acquisition_result_sets\".\"created_at\" <= \"acquisition_result_sets\".\"cleanup_after\""
+        }
+      }
+    }
+  },
+  "views": {},
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

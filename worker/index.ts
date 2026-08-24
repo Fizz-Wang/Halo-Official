@@ -178,12 +178,18 @@ interface ExecutionContext {
 // const imageConfig: ImageConfig = { dangerouslyAllowSVG: true };
 
 const worker = {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env | undefined, ctx: ExecutionContext): Promise<Response> {
+    // Vinext's standalone Node server does not inject a Cloudflare bindings
+    // object. Keep preview releases functional there while preserving the
+    // binding-first behavior used by hosted Workers.
+    const runtimeEnv = env ?? ({} as Env);
     const url = new URL(request.url);
     const release = resolveReleaseContext({
-      releaseMode: env.SITE_RELEASE_MODE,
-      releaseApproved: env.SITE_RELEASE_APPROVED,
-      canonicalOrigin: env.SITE_CANONICAL_ORIGIN,
+      releaseMode: runtimeEnv.SITE_RELEASE_MODE ?? process.env.SITE_RELEASE_MODE,
+      releaseApproved:
+        runtimeEnv.SITE_RELEASE_APPROVED ?? process.env.SITE_RELEASE_APPROVED,
+      canonicalOrigin:
+        runtimeEnv.SITE_CANONICAL_ORIGIN ?? process.env.SITE_CANONICAL_ORIGIN,
       requestUrl: request.url,
     });
     const cspNonce = createCspNonce();
@@ -204,9 +210,9 @@ const worker = {
     if (url.pathname === "/_vinext/image") {
       const allowedWidths = [...DEFAULT_DEVICE_SIZES, ...DEFAULT_IMAGE_SIZES];
       const response = await handleImageOptimization(request, {
-        fetchAsset: (path) => env.ASSETS.fetch(new Request(new URL(path, request.url))),
+        fetchAsset: (path) => runtimeEnv.ASSETS.fetch(new Request(new URL(path, request.url))),
         transformImage: async (body, { width, format, quality }) => {
-          const result = await env.IMAGES.input(body).transform(width > 0 ? { width } : {}).output({ format, quality });
+          const result = await runtimeEnv.IMAGES.input(body).transform(width > 0 ? { width } : {}).output({ format, quality });
           return result.response();
         },
       }, allowedWidths);
@@ -276,7 +282,7 @@ const worker = {
     ) {
       const notFoundUrl = new URL("/404/", request.url);
       const notFoundRequest = new Request(notFoundUrl, applicationRequest);
-      const response = await handler.fetch(notFoundRequest, env, ctx);
+      const response = await handler.fetch(notFoundRequest, runtimeEnv, ctx);
       const notFoundResponse = new Response(response.body, {
         status: 404,
         statusText: "Not Found",
@@ -290,7 +296,7 @@ const worker = {
       );
     }
 
-    const response = await handler.fetch(applicationRequest, env, ctx);
+    const response = await handler.fetch(applicationRequest, runtimeEnv, ctx);
     return finalizeResponse(
       request,
       response,

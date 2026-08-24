@@ -4282,6 +4282,244 @@ main[data-page-id="P11"] .evaluation-board [data-block-type="callout"] .callout 
   }
 }
 
+/* Home product story — deck-informed, claim-controlled promotional layers. */
+main[data-page-id="P01"] #platform-signals {
+  z-index: 4;
+  padding-block: 0 88px;
+  margin-block-start: -54px;
+  border-block-start: 0;
+  background: transparent;
+  overflow: visible;
+}
+
+main[data-page-id="P01"] #platform-signals .section-inner {
+  position: relative;
+}
+
+main[data-page-id="P01"] #platform-signals .facts-grid {
+  border-color: rgb(126 210 255 / 30%);
+  box-shadow:
+    0 34px 110px -54px rgb(53 121 255 / 90%),
+    inset 0 1px rgb(255 255 255 / 7%);
+}
+
+main[data-page-id="P01"] #platform-signals .fact {
+  min-block-size: 176px;
+  background:
+    radial-gradient(circle at 82% 12%, rgb(100 82 255 / 19%), transparent 31%),
+    linear-gradient(145deg, rgb(17 36 61 / 97%), rgb(7 15 29 / 99%));
+}
+
+main[data-page-id="P01"] #platform-signals .fact dt span {
+  text-shadow: 0 0 28px rgb(105 229 255 / 36%);
+}
+
+main[data-page-id="P01"] #migration-pressure {
+  background:
+    radial-gradient(circle at 8% 18%, rgb(54 126 255 / 14%), transparent 28%),
+    radial-gradient(circle at 92% 70%, rgb(112 72 244 / 12%), transparent 26%),
+    linear-gradient(180deg, #060d19, #07111f);
+}
+
+main[data-page-id="P01"] #migration-pressure::after {
+  position: absolute;
+  inset-block-start: 86px;
+  inset-inline-end: -130px;
+  inline-size: 360px;
+  aspect-ratio: 1;
+  border: 1px solid rgb(104 224 255 / 10%);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 44px rgb(88 139 255 / 2.6%),
+    0 0 0 88px rgb(88 139 255 / 1.8%);
+  content: "";
+  pointer-events: none;
+}
+
+main[data-page-id="P01"] #migration-pressure .section-inner,
+main[data-page-id="P01"] #compatibility-engine .section-inner {
+  position: relative;
+  z-index: 1;
+}
+
+main[data-page-id="P01"] #migration-pressure .section-heading {
+  max-inline-size: 18ch;
+}
+
+main[data-page-id="P01"] #migration-pressure .card {
+  border-block-start: 2px solid var(--experience-cyan);
+}
+
+main[data-page-id="P01"] #migration-pressure .card:nth-child(2) {
+  border-block-start-color: var(--experience-violet);
+}
+
+main[data-page-id="P01"] #migration-pressure .card:nth-child(3) {
+  border-block-start-color: var(--experience-copper);
+}
+
+main[data-page-id="P01"] #compatibility-engine {
+  background:
+    linear-gradient(90deg, rgb(62 133 255 / 4%) 1px, transparent 1px),
+    linear-gradient(rgb(62 133 255 / 4%) 1px, transparent 1px),
+    radial-gradient(circle at 50% 45%, rgb(47 102 214 / 10%), transparent 42%),
+    #050b15;
+  background-size: 56px 56px, 56px 56px, auto, auto;
+}
+
+main[data-page-id="P01"] #compatibility-engine .section-heading {
+  max-inline-size: 19ch;
+}
+
+main[data-page-id="P01"] #compatibility-engine .architecture-diagram {
+  border-color: rgb(116 213 255 / 30%);
+  background:
+    radial-gradient(circle at 50% 36%, rgb(73 111 255 / 16%), transparent 42%),
+    linear-gradient(145deg, rgb(11 26 46 / 97%), rgb(5 12 23 / 99%));
+  box-shadow:
+    0 38px 110px -62px rgb(54 134 255 / 92%),
+    inset 0 1px rgb(255 255 255 / 6%);
+}
+
+main[data-page-id="P01"] #compatibility-engine .diagram-node {
+  min-block-size: 210px;
+}
+
+main[data-page-id="P01"] #platform-capabilities {
+  background:
+    radial-gradient(circle at 92% 12%, rgb(112 73 235 / 13%), transparent 25%),
+    linear-gradient(180deg, #07101d, #060b16);
+}
+
+main[data-page-id="P01"] #platform-capabilities .card-grid {
+  gap: 20px;
+}
+
+main[data-page-id="P01"] #platform-capabilities .card:nth-child(3n + 1) {
+  background:
+    radial-gradient(circle at 88% 10%, rgb(55 187 255 / 13%), transparent 28%),
+    linear-gradient(145deg, rgb(17 36 60 / 92%), rgb(7 16 30 / 98%));
+}
+
+main[data-page-id="P01"] #platform-capabilities .card:nth-child(3n + 2) {
+  background:
+    radial-gradient(circle at 88% 10%, rgb(125 87 255 / 13%), transparent 28%),
+    linear-gradient(145deg, rgb(17 33 57 / 92%), rgb(7 16 30 / 98%));
+}
+
+main[data-page-id="P01"] #migration-path {
+  background:
+    linear-gradient(90deg, rgb(105 223 255 / 3.5%) 1px, transparent 1px),
+    radial-gradient(circle at 14% 78%, rgb(37 132 218 / 10%), transparent 28%),
+    #050b15;
+  background-size: 72px 100%, auto, auto;
+}
+
+main[data-page-id="P01"] #migration-path .section-heading {
+  max-inline-size: 18ch;
+}
+
+main[data-page-id="P01"] #migration-path .method-steps {
+  margin-block-start: 58px;
+}
+
+main[data-page-id="P01"] #migration-path .method-step {
+  border-block-start-color: rgb(105 229 255 / 22%);
+}
+
+main[data-page-id="P01"] #migration-path .method-step:nth-child(3) .method-number {
+  border-color: rgb(139 111 255 / 58%);
+  box-shadow: 0 0 26px -10px rgb(126 97 255 / 82%);
+}
+
+main[data-page-id="P01"] #product-foundation {
+  background:
+    radial-gradient(circle at 50% 0%, rgb(47 101 209 / 10%), transparent 34%),
+    linear-gradient(180deg, #07101d, #060c17);
+}
+
+main[data-page-id="P01"] #product-foundation .card {
+  min-block-size: 390px;
+}
+
+main[data-page-id="P01"] #workload-evidence {
+  padding-block: 84px;
+  background:
+    radial-gradient(circle at 84% 30%, rgb(101 76 234 / 12%), transparent 28%),
+    #050a13;
+}
+
+main[data-page-id="P01"] #workload-evidence .callout {
+  display: grid;
+  grid-template-columns: minmax(160px, 0.34fr) minmax(0, 1fr);
+  gap: 16px 54px;
+  align-items: start;
+  padding: clamp(36px, 5vw, 64px);
+  border-inline-start-width: 2px;
+  border-color: rgb(106 226 255 / 42%);
+  background:
+    radial-gradient(circle at 92% 18%, rgb(89 71 230 / 16%), transparent 28%),
+    linear-gradient(145deg, rgb(14 31 53 / 95%), rgb(7 15 28 / 98%));
+  box-shadow: 0 34px 100px -62px rgb(57 139 255 / 88%);
+}
+
+main[data-page-id="P01"] #workload-evidence .callout-label {
+  grid-row: 1 / span 2;
+  margin: 5px 0 0;
+}
+
+main[data-page-id="P01"] #workload-evidence .callout > h2:not(.callout-label),
+main[data-page-id="P01"] #workload-evidence .callout > .prose-stack {
+  grid-column: 2;
+}
+
+main[data-page-id="P01"] #workload-evidence .callout > h2:not(.callout-label) {
+  max-inline-size: 24ch;
+  margin-block-end: 4px;
+}
+
+@media (max-width: 1023px) {
+  main[data-page-id="P01"] #platform-signals {
+    margin-block-start: -32px;
+  }
+
+  main[data-page-id="P01"] #compatibility-engine .diagram-node {
+    min-block-size: 0;
+  }
+
+  main[data-page-id="P01"] #product-foundation .card {
+    min-block-size: 0;
+  }
+}
+
+@media (max-width: 719px) {
+  main[data-page-id="P01"] #platform-signals {
+    padding-block-end: 64px;
+    margin-block-start: -18px;
+  }
+
+  main[data-page-id="P01"] #migration-pressure::after {
+    display: none;
+  }
+
+  main[data-page-id="P01"] #migration-path .method-steps {
+    margin-block-start: 40px;
+  }
+
+  main[data-page-id="P01"] #workload-evidence {
+    padding-block: 56px;
+  }
+
+  main[data-page-id="P01"] #workload-evidence .callout {
+    display: block;
+    padding: 30px 24px;
+  }
+
+  main[data-page-id="P01"] #workload-evidence .callout-label {
+    margin-block-end: 14px;
+  }
+}
+
 .experience-static .page-hero--signal::before,
 .experience-static .page-hero--signal::after,
 .experience-static .page-hero--signal

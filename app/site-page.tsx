@@ -13,9 +13,10 @@ import {
   EvidenceRecord,
   ExperienceLayer,
   Footer,
-  HaloSignalField,
+  HaloDatabaseFlow,
   Header,
   LinkList,
+  ScrollableRegion,
   SkipLink,
   type ButtonLinkVariant,
 } from "./components";
@@ -225,19 +226,17 @@ function Block({
   }
 
   if (block.type === "cards") {
-    const gridClass =
-      block.items.length === 2
-        ? "card-grid card-grid-2"
-        : block.items.length >= 4
-          ? "card-grid card-grid-4"
-          : "card-grid";
+    const gridClass = `card-grid card-grid--${Math.min(
+      block.items.length,
+      6,
+    )}${block.items.length === 2 ? " card-grid-2" : ""}${
+      block.items.length >= 4 ? " card-grid-4" : ""
+    }`;
 
     return (
       <section
         aria-labelledby={block.heading ? `cards-${index}-heading` : undefined}
-        className={`section cards-section${
-          page.id === "P02" && index === 0 ? " operating-mode-section" : ""
-        }${variant ? ` ${variant}` : ""}`}
+        className={`section cards-section${variant ? ` ${variant}` : ""}`}
         data-block-type={block.type}
         data-reveal="section"
         id={block.anchor}
@@ -262,6 +261,14 @@ function Block({
                   data-tilt="card"
                   key={`${item.heading}-${itemIndex}`}
                 >
+                  <div
+                    aria-hidden="true"
+                    className={`card-visual card-visual--${(itemIndex % 4) + 1}`}
+                  >
+                    <i />
+                    <i />
+                    <i />
+                  </div>
                   {item.label ? (
                     <p className="card-eyebrow">{renderApprovedText(item.label)}</p>
                   ) : null}
@@ -351,7 +358,7 @@ function Block({
               {renderApprovedText(block.heading)}
             </h2>
           ) : null}
-          <ol className="method-steps">
+            <ol className={`method-steps method-steps--${block.items.length}`}>
             {block.items.map((item, stepIndex) => (
               <li
                 className="method-step"
@@ -361,9 +368,9 @@ function Block({
                 <span aria-hidden="true" className="method-number">
                   {String(stepIndex + 1).padStart(2, "0")}
                 </span>
-                <h2 aria-label={item.heading}>
+                <h3 aria-label={item.heading}>
                   {renderApprovedText(item.heading.replace(/^\d+\.\s+/, ""))}
-                </h2>
+                </h3>
                 {item.body ? <Paragraphs paragraphs={item.body} /> : null}
               </li>
             ))}
@@ -384,12 +391,16 @@ function Block({
         id={block.anchor}
       >
         <div className="section-inner">
-          <div className="comparison-wrap">
+          <h2 className="section-heading" id={headingId}>
+            {renderApprovedText(block.heading)}
+          </h2>
+          <ScrollableRegion
+            className={`comparison-wrap comparison-wrap--${block.columns.length}`}
+            labelledBy={headingId}
+          >
             <table className="comparison-table">
-              <caption>
-                <h2 className="table-caption-heading" id={headingId}>
-                  {renderApprovedText(block.heading)}
-                </h2>
+              <caption className="sr-only">
+                {renderApprovedText(block.heading)}
               </caption>
               <thead>
                 <tr>
@@ -412,13 +423,17 @@ function Block({
                 ))}
               </tbody>
             </table>
-          </div>
+          </ScrollableRegion>
         </div>
       </section>
     );
   }
 
   if (block.type === "checklist") {
+    const checklistHeading = page.id === "P11"
+      ? block.heading.replace(/^\d+\.\s+/, "")
+      : block.heading;
+
     return (
       <section
         className="section"
@@ -427,7 +442,7 @@ function Block({
         id={block.anchor}
       >
         <div className="section-inner">
-          <h2 className="section-heading">{renderApprovedText(block.heading)}</h2>
+          <h2 className="section-heading">{renderApprovedText(checklistHeading)}</h2>
           {block.intro ? (
             <div className="section-intro">
               <Paragraphs paragraphs={block.intro} />
@@ -642,7 +657,7 @@ function PageHero({ page }: { page: ActiveSitePage }) {
           <p className="lead">{renderApprovedText(page.hero.lead)}</p>
           <CTAGroup actions={actionsFor(page.hero.actions)} />
         </div>
-        <HaloSignalField variant={isExperienceHero ? "primary" : "ambient"} />
+        <HaloDatabaseFlow variant={isExperienceHero ? "primary" : "ambient"} />
       </div>
     </section>
   );
@@ -654,7 +669,9 @@ export function SitePage({ page }: { page: ActiveSitePage }) {
   const finalCta = indexedBlocks.at(-1)?.block.type === "cta"
     ? indexedBlocks.at(-1)
     : undefined;
-  const contentBlocks = hasLocalNavigation && finalCta
+  const usesEvaluationBoard = page.id === "P11";
+  const separatesFinalCta = Boolean(finalCta) && (hasLocalNavigation || usesEvaluationBoard);
+  const contentBlocks = separatesFinalCta
     ? indexedBlocks.slice(0, -1)
     : indexedBlocks;
   const renderBlock = ({ block, index }: (typeof indexedBlocks)[number]) => (
@@ -678,10 +695,12 @@ export function SitePage({ page }: { page: ActiveSitePage }) {
             <LocalNavigation page={page} />
             <div className="technical-column">{contentBlocks.map(renderBlock)}</div>
           </div>
+        ) : usesEvaluationBoard ? (
+          <div className="evaluation-board">{contentBlocks.map(renderBlock)}</div>
         ) : (
           contentBlocks.map(renderBlock)
         )}
-        {hasLocalNavigation && finalCta ? renderBlock(finalCta) : null}
+        {separatesFinalCta && finalCta ? renderBlock(finalCta) : null}
       </main>
       <Footer
         brand={{ label: "Halo Database", href: "/" }}

@@ -6,6 +6,7 @@ export * from "./EvidenceRecord";
 export * from "./ExperienceLayer";
 export * from "./Footer";
 export * from "./Header";
-export * from "./HaloSignalField";
+export * from "./HaloDatabaseFlow";
+export * from "./ScrollableRegion";
 export * from "./SkipLink";
 export * from "./States";

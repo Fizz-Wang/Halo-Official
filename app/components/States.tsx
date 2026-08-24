@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { CTAGroup, type CTAAction } from "./ButtonLink";
 import { Footer, type FooterLink } from "./Footer";
-import { HaloSignalField } from "./HaloSignalField";
+import { HaloDatabaseFlow } from "./HaloDatabaseFlow";
 import { SkipLink } from "./SkipLink";
 
 export interface ReducedStateProps {
@@ -93,7 +93,7 @@ export function NotFound({
         <h1>{heading}</h1>
         <div className="reduced-state-body">{body}</div>
         <CTAGroup actions={actions} />
-        <HaloSignalField variant="reduced" />
+        <HaloDatabaseFlow variant="reduced" />
       </section>
     </main>
   );

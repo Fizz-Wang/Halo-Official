@@ -379,9 +379,10 @@ test("renders P07 as a five-step decision method with one comparison", async () 
   const html = await response.text();
   assert.equal(count(html, /class=["']method-number["']/g), 5);
   assert.equal(count(html, /<table\b[^>]*class=["']comparison-table["']/g), 1);
-  assert.match(html, /<caption>\s*<h2[^>]*>\s*<span[^>]*>A demo and a PoC answer different questions<\/span>\s*<\/h2>\s*<\/caption>/i);
-  assert.doesNotMatch(html, /comparison-wrap[^>]*(?:tabindex|role|aria-label)/i);
-  assert.match(html, /<h2[^>]*aria-label=["']1\. Frame the decision["'][^>]*>\s*<span[^>]*>Frame the decision<\/span>\s*<\/h2>/i);
+  assert.match(html, /<h2[^>]*id=["']comparison-[^"']+-heading["'][^>]*>\s*<span[^>]*>A demo and a PoC answer different questions<\/span>\s*<\/h2>/i);
+  assert.match(html, /class=["'][^"']*comparison-wrap[^"']*["'][^>]*role=["']region["'][^>]*tabindex=["']0["']/i);
+  assert.match(html, /<caption[^>]*class=["']sr-only["'][^>]*>/i);
+  assert.match(html, /<h3[^>]*aria-label=["']1\. Frame the decision["'][^>]*>\s*<span[^>]*>Frame the decision<\/span>\s*<\/h3>/i);
 });
 
 test("keeps the P05 recovery scenario record ordered", async () => {
@@ -563,7 +564,10 @@ test("packages only the dormant D1 binding and non-personal acquisition migratio
   const hosting = JSON.parse(
     await readFile(new URL("../dist/.openai/hosting.json", import.meta.url), "utf8"),
   );
-  assert.deepEqual(hosting, { d1: "DB", r2: null });
+  assert.deepEqual(Object.keys(hosting).sort(), ["d1", "project_id", "r2"]);
+  assert.match(hosting.project_id, /^appgprj_[a-z0-9]+$/);
+  assert.equal(hosting.d1, "DB");
+  assert.equal(hosting.r2, null);
 
   const migrationDirectory = new URL("../dist/.openai/drizzle/", import.meta.url);
   const migrationNames = (await readdir(migrationDirectory))
@@ -608,8 +612,8 @@ test("keeps the frozen Stage 6 visual and keyboard contracts in source", async (
   assert.match(css, /@media \(max-width: 719px\)[\s\S]*?\.comparison-table th,[\s\S]*?padding:\s*12px;/);
   assert.match(css, /\.site-footer\s*\{[^}]*padding-block:\s*80px;/s);
   assert.match(css, /\.site-footer::before\s*\{[^}]*inline-size:\s*80px;[^}]*background:\s*var\(--accent-decorative\);/s);
-  assert.match(css, /\.operating-mode-section \.card-grid\s*\{[^}]*2fr 1fr 1fr;/s);
-  assert.match(css, /\.operating-mode-section \.card:first-child\s*\{[^}]*border-block-start:\s*2px solid var\(--action\);/s);
+  assert.match(css, /\.card-grid--5\s*\{[^}]*repeat\(6, minmax\(0, 1fr\)\);/s);
+  assert.match(css, /\.card-grid--6\s*\{[^}]*repeat\(3, minmax\(0, 1fr\)\);/s);
   assert.match(css, /\.evidence-list\s*\{[^}]*gap:\s*24px;/s);
   assert.match(css, /\.evidence-record\s*\{[^}]*border-block-start:\s*3px solid var\(--accent-decorative\);[^}]*box-shadow:\s*none;/s);
   assert.match(css, /grid-template-columns:\s*112px minmax\(0, 1fr\);/);
@@ -630,14 +634,14 @@ test("ships the owner-directed experience as decorative progressive enhancement"
     render("/product/"),
     render("/missing-experience-audit/"),
   ]);
-  const [home, product, notFound, css, signalField, experienceLayer, packageJson] =
+  const [home, product, notFound, css, databaseFlow, experienceLayer, packageJson] =
     await Promise.all([
       homeResponse.text(),
       productResponse.text(),
       notFoundResponse.text(),
       readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
       readFile(
-        new URL("../app/components/HaloSignalField.tsx", import.meta.url),
+        new URL("../app/components/HaloDatabaseFlow.tsx", import.meta.url),
         "utf8",
       ),
       readFile(
@@ -649,40 +653,37 @@ test("ships the owner-directed experience as decorative progressive enhancement"
 
   assert.equal(count(home, /<h1\b/gi), 1);
   assert.equal(count(home, /<form\b/gi), 0);
-  assert.equal(count(home, /class=["'][^"']*halo-signal-field/gi), 1);
-  assert.equal(count(home, /<canvas\b/gi), 1);
-  assert.match(home, /aria-hidden=["']true["'][^>]*class=["'][^"']*halo-signal-field/i);
+  assert.equal(count(home, /class=["'][^"']*halo-database-flow/gi), 1);
+  assert.equal(count(home, /<canvas\b/gi), 0);
+  assert.match(home, /aria-hidden=["']true["'][^>]*class=["'][^"']*halo-database-flow/i);
+  assert.match(home, /Query endpoints[\s\S]*?Primary[\s\S]*?Readable standby/i);
   assert.equal(count(home, /class=["']experience-progress["']/gi), 1);
   assert.equal(count(home, /class=["']experience-cursor["']/gi), 1);
-  assert.equal(count(product, /class=["'][^"']*halo-signal-field/gi), 1);
-  assert.match(product, /halo-signal-field--ambient/);
-  assert.equal(count(notFound, /class=["'][^"']*halo-signal-field/gi), 1);
-  assert.match(notFound, /halo-signal-field--reduced/);
+  assert.equal(count(product, /class=["'][^"']*halo-database-flow/gi), 1);
+  assert.match(product, /halo-database-flow--ambient/);
+  assert.equal(count(notFound, /class=["'][^"']*halo-database-flow/gi), 1);
+  assert.match(notFound, /halo-database-flow--reduced/);
   assert.equal(count(notFound, /class=["']experience-progress["']/gi), 1);
   assert.equal(count(notFound, /class=["']experience-cursor["']/gi), 1);
 
   assert.match(css, /Operational Cinema system — full-site visual revision/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.halo-signal-canvas\s*\{[^}]*display:\s*none;/);
-  assert.match(css, /@media \(forced-colors: active\)[\s\S]*?\.halo-signal-field,[\s\S]*?display:\s*none;/);
-  assert.match(css, /@media print[\s\S]*?\.halo-signal-field,[\s\S]*?display:\s*none !important;/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.data-flow-packet,[\s\S]*?animation:\s*none;/);
+  assert.match(css, /@media \(forced-colors: active\)[\s\S]*?\.halo-database-flow,[\s\S]*?display:\s*none;/);
+  assert.match(css, /@media print[\s\S]*?\.halo-database-flow,[\s\S]*?display:\s*none !important;/);
   assert.match(css, /@media \(max-width: 1399px\)[\s\S]*?\.site-header\s*\{[^}]*backdrop-filter:\s*none;/);
   assert.match(css, /@media \(scripting: enabled\) and \(max-width: 1399px\)[\s\S]*?\.primary-menu:not\(\.is-enhanced\) > \.menu-panel\s*\{[^}]*display:\s*none;/);
-  assert.match(css, /\.experience-static \.halo-signal-canvas,[\s\S]*?\.experience-static \.experience-progress\s*\{[^}]*display:\s*none;/);
+  assert.match(css, /\.experience-static \.data-flow-packet,[\s\S]*?animation:\s*none;/);
   assert.match(css, /@media \(hover: none\), \(pointer: coarse\)[\s\S]*?\.experience-cursor\s*\{[^}]*display:\s*none;/);
   assert.match(css, /@media \(forced-colors: active\)[\s\S]*?\.page-hero h1,[\s\S]*?\.final-cta h2\s*\{[^}]*color:\s*CanvasText;/);
   assert.match(css, /\.comparison-table\s*\{[^}]*background:\s*#07101d;/);
   assert.match(css, /\.reduced-state\s*\{[^}]*var\(--experience-canvas\);/s);
   assert.doesNotMatch(css, /\binfinite\b/);
 
-  assert.match(signalField, /const BOOT_DURATION_MS = 4600/);
-  assert.match(signalField, /navigator as ConnectionNavigator/);
-  assert.match(signalField, /let motionAllowed = !motionPreference\.matches && !saveData/);
-  assert.match(signalField, /let pointerAllowed = !coarsePointer\.matches/);
-  assert.match(signalField, /IntersectionObserver/);
-  assert.match(signalField, /ResizeObserver/);
-  assert.match(signalField, /cancelAnimationFrame/);
-  assert.match(signalField, /fieldElement\.addEventListener\("pointermove"/);
-  assert.match(signalField, /aria-hidden="true"/);
+  assert.match(databaseFlow, /Query endpoints/);
+  assert.match(databaseFlow, /Halo database/);
+  assert.match(databaseFlow, /Readable standby/);
+  assert.match(databaseFlow, /aria-hidden="true"/);
+  assert.doesNotMatch(databaseFlow, /canvas|useEffect|requestAnimationFrame/);
   assert.match(experienceLayer, /IntersectionObserver/);
   assert.match(experienceLayer, /revealObserver\.disconnect\(\)/);
   assert.match(experienceLayer, /connection\?\.saveData/);

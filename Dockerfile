@@ -3,7 +3,8 @@ FROM public.ecr.aws/docker/library/node:22-bookworm-slim AS build
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm install --no-audit --no-fund
+ARG NPM_REGISTRY=https://registry.npmjs.org
+RUN npm install --registry="${NPM_REGISTRY}" --no-audit --no-fund
 
 COPY . .
 RUN npm run build

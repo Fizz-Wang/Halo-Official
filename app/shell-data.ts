@@ -16,10 +16,6 @@ export const headerItems: readonly HeaderItem[] = [
         href: "/product/availability-recovery/",
       },
       {
-        label: "Distributed Data",
-        href: "/product/distributed/",
-      },
-      {
         label: "Operations & Observability",
         href: "/product/operations/",
       },
@@ -89,10 +85,6 @@ export const footerGroups: readonly FooterGroup[] = [
       {
         label: "Availability & Recovery",
         href: "/product/availability-recovery/",
-      },
-      {
-        label: "Distributed Data",
-        href: "/product/distributed/",
       },
       {
         label: "Operations & Observability",

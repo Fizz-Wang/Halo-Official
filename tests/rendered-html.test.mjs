@@ -14,7 +14,7 @@ const env = {
 const context = { waitUntil() {}, passThroughOnException() {} };
 
 const activeRoutes = [
-  ["/", "Halo Database | One Platform for Heterogeneous Workloads", "One database platform. Three operating modes.", "index, follow", "Explore Halo multimode compatibility, openHalo-based architecture, recovery, distributed data, and operations."],
+  ["/", "Halo Database | One Platform for Heterogeneous Workloads", "One database platform. Three operating modes.", "index, follow", "Explore Halo multimode compatibility, versioned behavior testing, recovery, workload diagnostics, and SQL policy controls."],
   ["/product/", "Halo Database Platform Overview", "A unified database platform for compatibility-led modernization.", "index, follow", "Explore Halo compatibility modes, database architecture, availability, distributed data, recovery, and operational capabilities."],
   ["/product/architecture/", "Architecture & Core Technology | Halo Database", "Understand the database beneath the compatibility layer.", "index, follow", "Understand Halo instances, clusters, transactions, isolation, indexing, partitioning, storage, and database objects."],
   ["/oracle-migration-evaluation/", "Oracle Migration Evaluation | Halo Database", "Evaluate compatibility before you estimate the rewrite.", "index, follow", "Evaluate Oracle protocol, schema, SQL, PL/SQL, Package, metadata, DBLINK, recovery, and operating dependencies on Halo."],
@@ -467,7 +467,6 @@ test("keeps the controlled primary shell order and one native no-JavaScript tree
     "Architecture &amp; Core",
     "Compatibility",
     "Availability &amp; Recovery",
-    "Distributed Data",
     "Operations &amp; Observability",
     "Data &amp; Extensions",
     "Migration",
@@ -628,7 +627,7 @@ test("keeps the frozen Stage 6 visual and keyboard contracts in source", async (
   assert.match(css, /\[data-anchor-focus="true"\]\s*\{[^}]*outline:/s);
 });
 
-test("ships the owner-directed experience as decorative progressive enhancement", async () => {
+test("ships the owner-directed experience as explanatory progressive enhancement", async () => {
   const [homeResponse, productResponse, notFoundResponse] = await Promise.all([
     render("/"),
     render("/product/"),
@@ -655,8 +654,13 @@ test("ships the owner-directed experience as decorative progressive enhancement"
   assert.equal(count(home, /<form\b/gi), 0);
   assert.equal(count(home, /class=["'][^"']*halo-database-flow/gi), 1);
   assert.equal(count(home, /<canvas\b/gi), 0);
-  assert.match(home, /aria-hidden=["']true["'][^>]*class=["'][^"']*halo-database-flow/i);
-  assert.match(home, /Query endpoints[\s\S]*?Primary[\s\S]*?Readable standby/i);
+  assert.match(home, /<figure[^>]*aria-labelledby=["']hero-mode-flow-heading["'][^>]*class=["'][^"']*halo-database-flow/i);
+  assert.match(home, /3 operating modes[\s\S]*?One Halo cluster/i);
+  assert.match(home, /Halo 1\.0\.16 supports Oracle, MySQL, and PostgreSQL operating modes within one cluster/i);
+  assert.match(home, /Choose an operating mode/);
+  assert.match(home, /Technology explorer[\s\S]*?Halo mechanism[\s\S]*?Evaluation value/i);
+  assert.match(home, /Set the workload boundary[\s\S]*?Record fit and decide/i);
+  assert.doesNotMatch(home, /distributed data|HSM|HDS/i);
   assert.equal(count(home, /class=["']experience-progress["']/gi), 1);
   assert.equal(count(home, /class=["']experience-cursor["']/gi), 1);
   assert.equal(count(product, /class=["'][^"']*halo-database-flow/gi), 1);
@@ -673,6 +677,8 @@ test("ships the owner-directed experience as decorative progressive enhancement"
   assert.match(css, /@media \(max-width: 1399px\)[\s\S]*?\.site-header\s*\{[^}]*backdrop-filter:\s*none;/);
   assert.match(css, /@media \(scripting: enabled\) and \(max-width: 1399px\)[\s\S]*?\.primary-menu:not\(\.is-enhanced\) > \.menu-panel\s*\{[^}]*display:\s*none;/);
   assert.match(css, /\.experience-static \.data-flow-packet,[\s\S]*?animation:\s*none;/);
+  assert.match(css, /@media \(scripting: enabled\)[\s\S]*?\.home-capability-panels \.home-capability-panel\[data-active="false"\][\s\S]*?display:\s*none;/);
+  assert.match(css, /@media \(scripting: none\)[\s\S]*?\.home-explorer-controls[\s\S]*?display:\s*none;/);
   assert.match(css, /@media \(hover: none\), \(pointer: coarse\)[\s\S]*?\.experience-cursor\s*\{[^}]*display:\s*none;/);
   assert.match(css, /@media \(forced-colors: active\)[\s\S]*?\.page-hero h1,[\s\S]*?\.final-cta h2\s*\{[^}]*color:\s*CanvasText;/);
   assert.match(css, /\.comparison-table\s*\{[^}]*background:\s*#07101d;/);
@@ -682,6 +688,8 @@ test("ships the owner-directed experience as decorative progressive enhancement"
   assert.match(databaseFlow, /Query endpoints/);
   assert.match(databaseFlow, /Halo database/);
   assert.match(databaseFlow, /Readable standby/);
+  assert.match(databaseFlow, /3 operating modes\. One Halo cluster\./);
+  assert.match(databaseFlow, /useState/);
   assert.match(databaseFlow, /aria-hidden="true"/);
   assert.doesNotMatch(databaseFlow, /canvas|useEffect|requestAnimationFrame/);
   assert.match(experienceLayer, /IntersectionObserver/);

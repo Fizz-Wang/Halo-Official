@@ -1,0 +1,24 @@
+services:
+  halo-site:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: halo-database-demo:2026-08-24
+    container_name: halo-database-demo
+    restart: unless-stopped
+    init: true
+    environment:
+      SITE_RELEASE_MODE: production
+      SITE_RELEASE_APPROVED: "true"
+      SITE_CANONICAL_ORIGIN: https://halo-demo.qichenggroup.top
+    ports:
+      - "127.0.0.1:14080:3000"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    mem_limit: 384m
+    cpus: 0.75

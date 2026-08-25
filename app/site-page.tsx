@@ -4,6 +4,7 @@ import type {
   ContentAction,
   ContentBlock,
   EvidenceRecord as EvidenceRecordData,
+  FactsBlock,
   ProseParagraph,
 } from "../lib/site-content";
 import {
@@ -15,6 +16,7 @@ import {
   Footer,
   HaloDatabaseFlow,
   Header,
+  HomeTechnologyStory,
   LinkList,
   ScrollableRegion,
   SkipLink,
@@ -636,6 +638,12 @@ function Block({
 
 function PageHero({ page }: { page: ActiveSitePage }) {
   const isExperienceHero = page.id === "P01";
+  const platformSignals = isExperienceHero
+    ? page.blocks.find(
+        (block): block is FactsBlock =>
+          block.type === "facts" && block.anchor === "platform-signals",
+      )
+    : undefined;
 
   return (
     <section
@@ -656,6 +664,15 @@ function PageHero({ page }: { page: ActiveSitePage }) {
           <h1 id="page-title">{renderApprovedText(page.hero.h1)}</h1>
           <p className="lead">{renderApprovedText(page.hero.lead)}</p>
           <CTAGroup actions={actionsFor(page.hero.actions)} />
+          {platformSignals ? (
+            <dl aria-label="Halo platform signals" className="home-hero-facts">
+              {platformSignals.items.map((item) => (
+                <div key={`${item.value}-${item.label}`}>
+                  <dt><strong>{item.value}</strong>{renderApprovedText(item.label)}</dt>
+                </div>
+              ))}
+            </dl>
+          ) : null}
         </div>
         <HaloDatabaseFlow variant={isExperienceHero ? "primary" : "ambient"} />
       </div>
@@ -670,7 +687,9 @@ export function SitePage({ page }: { page: ActiveSitePage }) {
     ? indexedBlocks.at(-1)
     : undefined;
   const usesEvaluationBoard = page.id === "P11";
-  const separatesFinalCta = Boolean(finalCta) && (hasLocalNavigation || usesEvaluationBoard);
+  const separatesFinalCta = Boolean(finalCta) && (
+    page.id === "P01" || hasLocalNavigation || usesEvaluationBoard
+  );
   const contentBlocks = separatesFinalCta
     ? indexedBlocks.slice(0, -1)
     : indexedBlocks;
@@ -690,7 +709,9 @@ export function SitePage({ page }: { page: ActiveSitePage }) {
       <Breadcrumbs items={page.breadcrumb} />
       <main className="site-main" data-page-id={page.id} id="main-content">
         <PageHero page={page} />
-        {hasLocalNavigation ? (
+        {page.id === "P01" ? (
+          <HomeTechnologyStory blocks={page.blocks} />
+        ) : hasLocalNavigation ? (
           <div className="local-layout">
             <LocalNavigation page={page} />
             <div className="technical-column">{contentBlocks.map(renderBlock)}</div>

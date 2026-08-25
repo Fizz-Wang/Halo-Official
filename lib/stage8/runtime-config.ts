@@ -21,36 +21,6 @@ export interface ReleaseInput {
   readonly requestUrl?: string;
 }
 
-export interface StandaloneProxyInput {
-  readonly requestUrl: string;
-  readonly forwardedProto?: string | null;
-  readonly forwardedHost?: string | null;
-}
-
-export function resolveStandaloneProxyUrl(input: StandaloneProxyInput): string {
-  let requestUrl: URL;
-  try {
-    requestUrl = new URL(input.requestUrl);
-  } catch {
-    return input.requestUrl;
-  }
-
-  const forwardedProto = input.forwardedProto;
-  const forwardedHost = input.forwardedHost;
-  if (
-    forwardedProto !== "https" ||
-    !forwardedHost ||
-    forwardedHost !== forwardedHost.trim() ||
-    forwardedHost.includes(",") ||
-    forwardedHost.toLowerCase() !== requestUrl.host.toLowerCase()
-  ) {
-    return input.requestUrl;
-  }
-
-  requestUrl.protocol = "https:";
-  return requestUrl.href;
-}
-
 function isIpAddress(hostname: string) {
   if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostname)) return true;
   return hostname.includes(":");

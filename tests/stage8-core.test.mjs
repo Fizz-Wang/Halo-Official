@@ -20,7 +20,6 @@ import {
 import {
   parseApprovedOrigin,
   resolveReleaseContext,
-  resolveStandaloneProxyUrl,
 } from "../lib/stage8/runtime-config.ts";
 
 test("keeps every Stage 8 gate closed by default and activates only complete graphs", () => {
@@ -107,32 +106,6 @@ test("requires the release key, approved origin, and exact request origin", () =
     }),
     { active: true, origin: "https://halo.example.com", reason: "active" },
   );
-});
-
-test("accepts the exact HTTPS origin forwarded by the loopback reverse proxy", () => {
-  assert.equal(
-    resolveStandaloneProxyUrl({
-      requestUrl: "http://halo-demo.qichenggroup.top/product/?source=test",
-      forwardedProto: "https",
-      forwardedHost: "halo-demo.qichenggroup.top",
-    }),
-    "https://halo-demo.qichenggroup.top/product/?source=test",
-  );
-
-  for (const forwarded of [
-    { forwardedProto: "http", forwardedHost: "halo-demo.qichenggroup.top" },
-    { forwardedProto: "https", forwardedHost: "preview.example.com" },
-    { forwardedProto: "https", forwardedHost: "halo-demo.qichenggroup.top, attacker.example" },
-    { forwardedProto: "https", forwardedHost: " halo-demo.qichenggroup.top" },
-  ]) {
-    assert.equal(
-      resolveStandaloneProxyUrl({
-        requestUrl: "http://halo-demo.qichenggroup.top/",
-        ...forwarded,
-      }),
-      "http://halo-demo.qichenggroup.top/",
-    );
-  }
 });
 
 test("fails robots and sitemap closed until the release context is active", () => {

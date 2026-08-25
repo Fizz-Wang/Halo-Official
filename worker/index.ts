@@ -7,7 +7,6 @@ import {
   releaseActiveHeader,
   releaseOriginHeader,
   resolveReleaseContext,
-  resolveStandaloneProxyUrl,
 } from "../lib/stage8/runtime-config";
 
 const activeHtmlPaths: ReadonlySet<string> = new Set(activePaths);
@@ -185,20 +184,13 @@ const worker = {
     // binding-first behavior used by hosted Workers.
     const runtimeEnv = env ?? ({} as Env);
     const url = new URL(request.url);
-    const releaseRequestUrl = env === undefined
-      ? resolveStandaloneProxyUrl({
-          requestUrl: request.url,
-          forwardedProto: request.headers.get("x-forwarded-proto"),
-          forwardedHost: request.headers.get("x-forwarded-host"),
-        })
-      : request.url;
     const release = resolveReleaseContext({
       releaseMode: runtimeEnv.SITE_RELEASE_MODE ?? process.env.SITE_RELEASE_MODE,
       releaseApproved:
         runtimeEnv.SITE_RELEASE_APPROVED ?? process.env.SITE_RELEASE_APPROVED,
       canonicalOrigin:
         runtimeEnv.SITE_CANONICAL_ORIGIN ?? process.env.SITE_CANONICAL_ORIGIN,
-      requestUrl: releaseRequestUrl,
+      requestUrl: request.url,
     });
     const cspNonce = createCspNonce();
     const contentSecurityPolicy = createContentSecurityPolicy(cspNonce);

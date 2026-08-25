@@ -11,6 +11,8 @@ services:
       SITE_RELEASE_MODE: production
       SITE_RELEASE_APPROVED: "true"
       SITE_CANONICAL_ORIGIN: https://halo-demo.qichenggroup.top
+      VINEXT_TRUST_PROXY: "1"
+      VINEXT_TRUSTED_HOSTS: halo-demo.qichenggroup.top
     ports:
       - "127.0.0.1:14080:3000"
     read_only: true

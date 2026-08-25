@@ -7,7 +7,7 @@ ARG NPM_REGISTRY=https://registry.npmjs.org
 RUN npm install --registry="${NPM_REGISTRY}" --no-audit --no-fund
 
 COPY . .
-RUN npm run build
+RUN npm_config_registry="${NPM_REGISTRY}" npm run build
 
 FROM public.ecr.aws/docker/library/node:22-bookworm-slim AS runtime
 

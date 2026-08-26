@@ -9,7 +9,7 @@ export const manualJourneyPages = [
     canonicalPath: "/",
     seo: {
       title: "Halo Database | One Database, Three Operating Modes",
-      description: "Trace how Halo 1.0.16 carries Oracle, MySQL, and PostgreSQL operating-mode workloads through compatibility, migration, durability, recovery, and scale.",
+      description: "Explore how Halo 1.0.16 handles compatibility, migration decisions, conditional role changes, database-aware routing, and partitioned data placement.",
       canonicalPath: "/",
       robots: "index, follow",
     },
@@ -18,9 +18,9 @@ export const manualJourneyPages = [
     hero: {
       eyebrow: "COMPATIBILITY-LED DATABASE MODERNIZATION",
       h1: "One database. Three ways in.",
-      lead: "Halo 1.0.16 supports Oracle, MySQL, and PostgreSQL operating modes within one cluster. Follow one workload beyond that entry point—through migration decisions, durable operation, recovery choices, and targeted scale.",
+      lead: "Halo 1.0.16 supports Oracle, MySQL, and PostgreSQL operating modes within one cluster. Explore compatibility, migration, continuity, and distributed data one mechanism at a time.",
       actions: [
-        { label: "Watch the system move", href: "#technology-story", kind: "primary" },
+        { label: "Explore the mechanisms", href: "#technology-story", kind: "primary" },
         { label: "Explore the architecture", href: "/product/architecture/", kind: "secondary" },
         { label: "Prepare a demo brief", href: "/request-demo/?source=home-hero", kind: "text" },
       ],
@@ -29,45 +29,65 @@ export const manualJourneyPages = [
       {
         type: "diagram",
         anchor: "technology-story",
-        eyebrow: "ONE WORKLOAD · ONE CONTINUOUS SYSTEM",
-        heading: "Follow one workload through Halo.",
+        eyebrow: "FIVE PROBLEMS · FIVE DISTINCT MECHANISMS",
+        heading: "See what changes inside Halo.",
         intro: [
-          "Scroll or choose a stage. The same workload and Halo system remain in view while mode, dependency status, durability path, database role, and scale route change.",
+          "Each section isolates one customer problem, the Halo mechanism that addresses it, and the result a team can evaluate next.",
         ],
         layout: "flow",
         nodes: [
           {
             label: "COMPATIBILITY",
-            heading: "Translate expected behavior into a mode-aware request",
-            body: ["E5 carries the selected operating mode through its documented protocol, parsing and semantics, optimization, and execution layers. Exact coverage remains workload-specific."],
+            heading: "Keep expected application behavior in view.",
+            body: [
+              "Migration risk is rarely SQL alone: protocol, types, procedural logic, metadata, and optimizer-visible semantics can all matter.",
+              "Halo E5 carries a selected Oracle, MySQL, or native PostgreSQL operating-mode request through protocol, parsing and semantics, optimization, and execution.",
+              "Teams can trace where behavior is interpreted before validating exact workload coverage.",
+            ],
             tone: "accent",
           },
           {
             label: "MIGRATION",
-            heading: "Turn dependencies into fit decisions",
-            body: ["Inventory SQL behavior, procedural logic, remote access, drivers, and tools. Retain documented matches, remediate gaps, and leave unresolved items visible before cutover."],
+            heading: "Turn hidden dependencies into decisions.",
+            body: [
+              "Moving rows does not resolve procedural logic, remote access, drivers, tools, or transactional expectations.",
+              "The evaluation path inventories each dependency, maps documented candidates, assigns representative tests, and keeps remediation or unresolved gaps visible.",
+              "The team leaves with retain, verify, remediate, or stop decisions instead of a generic compatibility percentage.",
+            ],
             tone: "default",
           },
           {
-            label: "RUN",
-            heading: "Let one commit expose the durability chain",
-            body: ["Transaction state produces write-ahead log (WAL) records before pages and checkpoints persist change. Replication, archive, backup, and point-in-time recovery depend on their own WAL-related paths."],
+            label: "HIGH AVAILABILITY",
+            heading: "Move a role only after the control path agrees.",
+            body: [
+              "A failed primary can become a split-brain risk if traffic moves before control state and fencing are established.",
+              "Shield evaluates health plus etcd quorum and leader state, protects the topology through fencing, checks replica eligibility, and coordinates role and VIP movement when conditions pass.",
+              "A role change becomes an explicit, conditional sequence—not an unconditional failover promise.",
+            ],
             tone: "dark",
           },
           {
-            label: "RECOVER",
-            heading: "Require conditions before the role changes",
-            body: ["Replication keeps a standby current. Shield coordinates health, quorum and leader state, fencing, role lifecycle, and service-address movement; RMAN2 and archived WAL remain a separate restore path."],
+            label: "READ / WRITE ROUTING",
+            heading: "Let database semantics choose the path.",
+            body: [
+              "A read-only connection usually cannot accept a write without application or proxy routing logic.",
+              "TWR uses statement semantics, transaction state, and object type to keep read work local and forward detected writes to the read/write node, returning the result through the original connection.",
+              "Teams can evaluate a database-aware route without treating TWR as an external proxy or a latency guarantee.",
+            ],
             tone: "accent",
           },
           {
-            label: "SCALE",
-            heading: "Route only the pressure you need to scale",
-            body: ["DLB, TWR, and HDS are distinct patterns for read distribution, writes from a read-only connection, and partition-aware data routing."],
+            label: "SHARDING",
+            heading: "Route a partition to the data that owns its range.",
+            body: [
+              "A distributed query becomes wasteful when every data node receives work that its range cannot answer.",
+              "HDS presents one logical database through a worker; partition mappings, shard_fdw, predicate pushdown, and pruning direct relevant ranges to independent Halo data nodes.",
+              "Teams can understand the placement model before evaluating worker availability, resharding, and cross-shard transaction requirements.",
+            ],
             tone: "muted",
           },
         ],
-        caption: ["This is a simplified mechanism trace, not a deployment topology. Results depend on the selected mode, build, settings, workload, and operating policy."],
+        caption: ["These are simplified mechanism explainers, not deployment topologies. Results depend on the Halo build, selected mode or component, settings, workload, topology, and operating policy."],
       },
       {
         type: "facts",
@@ -76,7 +96,7 @@ export const manualJourneyPages = [
         intro: ["The Halo 1.0.16 documentation records the history and product counts below. None replaces evaluation against the target workload and topology."],
         items: [
           { value: "2012", label: "manual-traced migration origin", body: "The Halo manual traces the database lineage to an Oracle application migration challenge." },
-          { value: "≥95%", label: "manual-reported Oracle code-change reduction", body: "Reported from Oracle migration practice; workload-specific, not universal and not a forecast." },
+          { value: "≥95%", label: "manual-reported Oracle-related application code-change reduction", body: "Reported from Oracle migration practice; workload-specific, not universal and not a forecast." },
           { value: "45", label: "documented extensions", body: "Grouped across diagnostics, data, search, integration, security, events, and utilities." },
         ],
       },

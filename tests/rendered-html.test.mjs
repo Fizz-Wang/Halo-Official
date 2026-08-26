@@ -14,7 +14,7 @@ const env = {
 const context = { waitUntil() {}, passThroughOnException() {} };
 
 const activeRoutes = [
-  ["/", "Halo Database | One Database, Three Operating Modes", "One database. Three ways in.", "index, follow", "Trace how Halo 1.0.16 carries Oracle, MySQL, and PostgreSQL operating-mode workloads through compatibility, migration, durability, recovery, and scale."],
+  ["/", "Halo Database | One Database, Three Operating Modes", "One database. Three ways in.", "index, follow", "Explore how Halo 1.0.16 handles compatibility, migration decisions, conditional role changes, database-aware routing, and partitioned data placement."],
   ["/product/", "Halo Database Platform Overview", "A unified database platform for compatibility-led modernization.", "index, follow", "Explore Halo compatibility modes, database architecture, availability, distributed data, recovery, and operational capabilities."],
   ["/product/architecture/", "Architecture & Core Technology | Halo Database", "Understand the database beneath the compatibility layer.", "index, follow", "Understand Halo instances, clusters, transactions, isolation, indexing, partitioning, storage, and database objects."],
   ["/oracle-migration-evaluation/", "Oracle Migration Evaluation | Halo Database", "Evaluate compatibility before you estimate the rewrite.", "index, follow", "Evaluate Oracle protocol, schema, SQL, PL/SQL, Package, metadata, DBLINK, recovery, and operating dependencies on Halo."],
@@ -627,7 +627,7 @@ test("keeps the frozen Stage 6 visual and keyboard contracts in source", async (
   assert.match(css, /\[data-anchor-focus="true"\]\s*\{[^}]*outline:/s);
 });
 
-test("ships the continuous workload story as explanatory progressive enhancement", async () => {
+test("ships five independent mechanism explainers as accessible progressive enhancement", async () => {
   const [homeResponse, productResponse, notFoundResponse] = await Promise.all([
     render("/"),
     render("/product/"),
@@ -658,13 +658,27 @@ test("ships the continuous workload story as explanatory progressive enhancement
   assert.equal(count(home, /<form\b/gi), 0);
   assert.equal(count(home, /class=["'][^"']*halo-database-flow/gi), 1);
   assert.equal(count(home, /<canvas\b/gi), 0);
+  assert.equal(count(home, /<section[^>]*class=["'][^"']*home-mechanism-section\b/gi), 5);
+  assert.equal(count(home, /<dt>Customer problem<\/dt>/gi), 5);
+  assert.equal(count(home, /<dt>Halo mechanism<\/dt>/gi), 5);
+  assert.equal(count(home, /<dt>What changes<\/dt>/gi), 5);
+
   assert.match(home, /<figure[^>]*aria-labelledby=["']hero-engine-heading["'][^>]*class=["'][^"']*halo-database-flow/i);
-  assert.match(home, /Watch one workload continue through Halo\./i);
+  assert.match(home, /Three operating modes\. One Halo foundation\./i);
   assert.match(home, /Halo 1\.0\.16[\s\S]*?supports[\s\S]*?Oracle[\s\S]*?MySQL[\s\S]*?PostgreSQL[\s\S]*?operating modes within one cluster/i);
   assert.doesNotMatch(home, /Halo platform signals|home-hero-facts/i);
-  assert.match(home, /Follow one workload through Halo\./i);
-  assert.match(home, /COMPATIBILITY[\s\S]*?MIGRATION[\s\S]*?RUN[\s\S]*?RECOVER[\s\S]*?SCALE/i);
-  assert.match(home, /Translate expected behavior into a mode-aware request[\s\S]*?Turn dependencies into fit decisions[\s\S]*?Let one commit expose the durability chain[\s\S]*?Require conditions before the role changes[\s\S]*?Route only the pressure you need to scale/i);
+  assert.match(home, /See what changes inside Halo\./i);
+  assert.match(home, /COMPATIBILITY[\s\S]*?MIGRATION[\s\S]*?HIGH AVAILABILITY[\s\S]*?READ \/ WRITE ROUTING[\s\S]*?SHARDING/i);
+  assert.match(home, /Keep expected application behavior in view\.[\s\S]*?Turn hidden dependencies into decisions\.[\s\S]*?Move a role only after the control path agrees\.[\s\S]*?Let database semantics choose the path\.[\s\S]*?Route a partition to the data that owns its range\./i);
+  assert.match(home, /protocol, parsing and semantics, optimization, and execution/i);
+  assert.match(home, /Retain for workload verification[\s\S]*?Verify the behavior that matters[\s\S]*?Remediate or leave unresolved/i);
+  assert.match(home, /Quorum \+ leader state[\s\S]*?Fencing[\s\S]*?Eligible replica/i);
+  assert.match(home, /Statement semantics[\s\S]*?Transaction state[\s\S]*?Object type/i);
+  assert.match(home, /Partition map[\s\S]*?match predicate[\s\S]*?prune unrelated partitions[\s\S]*?route mapped partition[\s\S]*?push down relevant work/i);
+  assert.match(home, /manual-reported Oracle-related application code-change reduction/);
+  assert.match(home, /Explore E5 and operating modes[\s\S]*?Follow the Oracle migration path[\s\S]*?Review continuity and Shield[\s\S]*?Inspect TWR boundaries[\s\S]*?Explore HDS placement/i);
+  assert.doesNotMatch(home, /Follow one workload through Halo|HALO SYSTEM IN MOTION|Let one commit expose the durability chain/i);
+
   assert.match(home, /2012[\s\S]*?≥95%[\s\S]*?45/i);
   assert.doesNotMatch(home, /second LTS/i);
   assert.match(home, /Reported from Oracle migration practice; workload-specific, not universal and not a forecast\./i);
@@ -672,6 +686,7 @@ test("ships the continuous workload story as explanatory progressive enhancement
   assert.doesNotMatch(home, /Technology explorer|Set the workload boundary|Record fit and decide|SQL firewall/i);
   assert.equal(count(home, /class=["']experience-progress["']/gi), 1);
   assert.equal(count(home, /class=["']experience-cursor["']/gi), 1);
+
   assert.equal(count(product, /class=["'][^"']*halo-database-flow/gi), 1);
   assert.match(product, /halo-database-flow--ambient/);
   assert.match(product, /Oracle[\s\S]*?MySQL[\s\S]*?PostgreSQL[\s\S]*?operating modes are documented within one cluster/i);
@@ -681,57 +696,55 @@ test("ships the continuous workload story as explanatory progressive enhancement
   assert.equal(count(notFound, /class=["']experience-progress["']/gi), 1);
   assert.equal(count(notFound, /class=["']experience-cursor["']/gi), 1);
 
-  assert.match(css, /Homepage continuous system narrative — one workload, one persistent Halo stage/);
+  assert.match(css, /Homepage separated mechanism narratives — five problems, five visual grammars/);
+  assert.doesNotMatch(css, /Homepage continuous system narrative|home-technology-story--continuous|home-system-canvas|home-runtime-map/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.home-migration-sorter i,[\s\S]*?animation:\s*none;/);
+  assert.match(css, /@media \(forced-colors: active\)[\s\S]*?\.home-mechanism-controls button\[aria-pressed="true"\],[\s\S]*?background:\s*Highlight;/);
+  assert.match(css, /@media \(scripting: none\)[\s\S]*?\.home-mechanism-controls\s*\{[^}]*display:\s*none;/);
+  assert.match(css, /@media print[\s\S]*?\.home-mechanism-section\s*\{[^}]*overflow:\s*visible;/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.home-compatibility-pipeline\s*\{[^}]*grid-template-columns:\s*1fr;/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.home-migration-board\s*\{[^}]*grid-template-columns:\s*1fr;/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.home-availability-topology\s*\{[^}]*grid-template-columns:\s*1fr;/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.home-routing-stage\s*\{[^}]*grid-template-columns:\s*1fr;/);
+  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.home-sharding-explainer\s*\{[^}]*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.data-flow-packet,[\s\S]*?animation:\s*none;/);
   assert.match(css, /@media \(forced-colors: active\)[\s\S]*?\.halo-database-flow,[\s\S]*?display:\s*none;/);
   assert.match(css, /@media print[\s\S]*?\.halo-database-flow,[\s\S]*?display:\s*none !important;/);
   assert.match(css, /@media \(max-width: 1199px\)[\s\S]*?\.site-header\s*\{[^}]*backdrop-filter:\s*none;/);
   assert.match(css, /@media \(scripting: enabled\) and \(max-width: 1199px\)[\s\S]*?\.primary-menu:not\(\.is-enhanced\) > \.menu-panel\s*\{[^}]*display:\s*none;/);
-  assert.match(css, /\.experience-static \.data-flow-packet,[\s\S]*?animation:\s*none;/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.home-system-route i,[\s\S]*?animation:\s*none;/);
-  assert.match(css, /@media \(forced-colors: active\)[\s\S]*?\.home-system-canvas,[\s\S]*?border-color:\s*CanvasText;/);
-  assert.match(css, /@media print[\s\S]*?\.home-technology-story--continuous \.home-technology-stage-wrap\s*\{[^}]*display:\s*none !important;/);
   assert.match(css, /@media \(hover: none\), \(pointer: coarse\)[\s\S]*?\.experience-cursor\s*\{[^}]*display:\s*none;/);
   assert.match(css, /@media \(forced-colors: active\)[\s\S]*?\.page-hero h1,[\s\S]*?\.final-cta h2\s*\{[^}]*color:\s*CanvasText;/);
   assert.match(css, /\.comparison-table\s*\{[^}]*background:\s*#07101d;/);
   assert.match(css, /\.reduced-state\s*\{[^}]*var\(--experience-canvas\);/s);
   assert.doesNotMatch(css, /var\(--content-wide\)/);
-  assert.match(css, /@media \(max-width: 880px\)[\s\S]*?\.home-technology-story--continuous \.home-technology-stage-wrap\s*\{[^}]*position:\s*relative;/);
-  assert.match(css, /@media \(max-width: 880px\)[\s\S]*?\.home-technology-story--continuous \.home-technology-chapters li > button,[\s\S]*?visibility:\s*visible;/);
-  assert.match(css, /@media \(max-width: 620px\)[\s\S]*?\.home-system-canvas\s*\{[^}]*grid-template-columns:\s*1fr;/);
-  assert.match(css, /@media \(max-width: 620px\)[\s\S]*?\.home-system-toolbar \.home-scene-controls\s*\{[^}]*flex-wrap:\s*wrap;/);
-  assert.match(css, /@media \(max-width: 620px\)[\s\S]*?\.home-system-core-grid\s*\{[^}]*grid-template-columns:\s*1fr;/);
-  assert.match(css, /@media \(max-width: 620px\)[\s\S]*?\.home-system-outputs\s*\{[^}]*grid-template-columns:\s*1fr;/);
-  assert.match(css, /@media \(scripting: none\)[\s\S]*?\.home-technology-story--continuous \.home-technology-stage-wrap\s*\{[^}]*display:\s*none;[\s\S]*?\.home-technology-story--continuous \.home-technology-chapters\s*\{[^}]*display:\s*block;/);
   assert.doesNotMatch(css, /\binfinite\b/);
 
   assert.match(databaseFlow, /Query endpoints/);
   assert.match(databaseFlow, /Halo database/);
   assert.match(databaseFlow, /Readable standby/);
-  assert.match(databaseFlow, /WORKLOAD TRACE/);
+  assert.match(databaseFlow, /OPERATING-MODE ENTRY/);
   assert.match(databaseFlow, /HALO 1\.0\.16/);
   assert.match(databaseFlow, /ONE PLATFORM/);
-  assert.match(databaseFlow, /Workload lifecycle/);
+  assert.match(databaseFlow, /EXECUTION[\s\S]*?Result[\s\S]*?plan · commit · persist/);
   assert.doesNotMatch(databaseFlow, /useState|onClick|aria-pressed/);
   assert.match(databaseFlow, /aria-hidden="true"/);
   assert.doesNotMatch(databaseFlow, /canvas|useEffect|requestAnimationFrame/);
-  assert.match(homeStory, /function HaloSystemCanvas/);
-  assert.match(homeStory, /function sceneSnapshot/);
-  assert.match(homeStory, /function sceneForLabel/);
-  assert.match(homeStory, /function storyLink/);
-  assert.match(homeStory, /sceneId === "migration" && activeMode !== "oracle"/);
-  assert.match(homeStory, /href: "\/evaluation\/", label: "Use the workload PoC method"/);
-  assert.match(homeStory, /home-system-source/);
-  assert.match(homeStory, /home-system-core/);
-  assert.match(homeStory, /home-system-causality/);
-  assert.match(homeStory, /IntersectionObserver/);
-  assert.match(homeStory, /manualSceneRef/);
-  assert.match(homeStory, /manualSelectionLockedRef/);
-  assert.doesNotMatch(homeStory, /document\.activeElement/);
-  assert.doesNotMatch(homeStory, /STORY_SCENES\[/);
-  assert.match(homeStory, /const \[activeMode, setActiveMode\] = useState<ModeId>/);
-  assert.match(homeStory, /aria-label="Technology story scenes"/);
-  assert.doesNotMatch(homeStory, /next\/link|<canvas|requestAnimationFrame/);
+
+  assert.match(homeStory, /function CompatibilitySection/);
+  assert.match(homeStory, /function MigrationSection/);
+  assert.match(homeStory, /function AvailabilitySection/);
+  assert.match(homeStory, /function RoutingSection/);
+  assert.match(homeStory, /function ShardingSection/);
+  assert.match(homeStory, /function requireNode/);
+  assert.match(homeStory, /needs problem, mechanism, and result copy/);
+  assert.match(homeStory, /label="Choose a Halo operating mode"/);
+  assert.match(homeStory, /label="Choose a Shield role-change stage"/);
+  assert.match(homeStory, /label="Choose a TWR routing example"/);
+  assert.match(homeStory, /aria-label="Choose a partition range"/);
+  assert.match(homeStory, /onPointerEnter/);
+  assert.doesNotMatch(homeStory, /onFocus|IntersectionObserver|addEventListener|scrollIntoView|requestAnimationFrame|<canvas/);
+  assert.doesNotMatch(homeStory, /HaloSystemCanvas|sceneSnapshot|sceneForLabel|manualSceneRef|manualSelectionLockedRef/);
+
   assert.match(experienceLayer, /IntersectionObserver/);
   assert.match(experienceLayer, /revealObserver\.disconnect\(\)/);
   assert.match(experienceLayer, /connection\?\.saveData/);

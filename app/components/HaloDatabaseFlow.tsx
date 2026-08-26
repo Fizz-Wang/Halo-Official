@@ -28,8 +28,8 @@ export function HaloDatabaseFlow({
       >
         <div className="halo-engine-head">
           <div>
-            <span>WORKLOAD TRACE</span>
-            <strong id="hero-engine-heading">Watch one workload continue through Halo.</strong>
+            <span>OPERATING-MODE ENTRY</span>
+            <strong id="hero-engine-heading">Three operating modes. One Halo foundation.</strong>
           </div>
           <span>HALO 1.0.16</span>
         </div>
@@ -42,9 +42,9 @@ export function HaloDatabaseFlow({
 
         <div aria-hidden="true" className="halo-engine-path">
           <div className="halo-engine-source">
-            <small>START</small>
-            <strong>Application behavior</strong>
-            <span>Oracle · MySQL · PostgreSQL</span>
+            <small>INPUT</small>
+            <strong>App input</strong>
+            <span>Mode entry</span>
           </div>
           <span className="halo-engine-route"><i /></span>
           <div className="halo-engine-layers">
@@ -55,15 +55,15 @@ export function HaloDatabaseFlow({
           </div>
           <span className="halo-engine-route halo-engine-route--out"><i /></span>
           <div className="halo-engine-kernel">
-            <small>TRACE</small>
-            <strong>Workload lifecycle</strong>
-            <span>Assess · run · recover · scale</span>
+            <small>EXECUTION</small>
+            <strong>Result</strong>
+            <span>plan · commit · persist</span>
           </div>
         </div>
 
         <figcaption>
-          <strong>Start with application behavior.</strong>
-          <span>Then follow what changes inside the system.</span>
+          <strong>Start with expected application behavior.</strong>
+          <span>Then inspect each mechanism on its own terms.</span>
           <small>Halo 1.0.16 documents Oracle, MySQL, and PostgreSQL operating modes within one cluster; exact coverage remains workload-specific.</small>
         </figcaption>
       </figure>

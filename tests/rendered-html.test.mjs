@@ -627,13 +627,13 @@ test("keeps the frozen Stage 6 visual and keyboard contracts in source", async (
   assert.match(css, /\[data-anchor-focus="true"\]\s*\{[^}]*outline:/s);
 });
 
-test("ships five independent mechanism explainers as accessible progressive enhancement", async () => {
+test("ships five independent scroll stories as accessible progressive enhancement", async () => {
   const [homeResponse, productResponse, notFoundResponse] = await Promise.all([
     render("/"),
     render("/product/"),
     render("/missing-experience-audit/"),
   ]);
-  const [home, product, notFound, css, databaseFlow, homeStory, experienceLayer, packageJson] =
+  const [home, product, notFound, css, databaseFlow, homeStory, homeStoryMotion, experienceLayer, packageJson] =
     await Promise.all([
       homeResponse.text(),
       productResponse.text(),
@@ -648,6 +648,10 @@ test("ships five independent mechanism explainers as accessible progressive enha
         "utf8",
       ),
       readFile(
+        new URL("../app/components/HomeStoryMotionClient.tsx", import.meta.url),
+        "utf8",
+      ),
+      readFile(
         new URL("../app/components/ExperienceLayer.tsx", import.meta.url),
         "utf8",
       ),
@@ -659,24 +663,61 @@ test("ships five independent mechanism explainers as accessible progressive enha
   assert.equal(count(home, /class=["'][^"']*halo-database-flow/gi), 1);
   assert.equal(count(home, /<canvas\b/gi), 0);
   assert.equal(count(home, /<section[^>]*class=["'][^"']*home-mechanism-section\b/gi), 5);
+  const storyOpenings = [...home.matchAll(/<section\b[^>]*\bdata-scroll-story=["']([^"']+)["'][^>]*>/gi)];
+  assert.deepEqual(storyOpenings.map((match) => match[1]), [
+    "compatibility",
+    "migration",
+    "availability",
+    "routing",
+    "sharding",
+  ]);
+  const storyRegionEnd = home.indexOf('class="home-product-proof"');
+  assert.ok(storyRegionEnd > (storyOpenings.at(-1)?.index ?? 0));
+  const storySlices = storyOpenings.map((match, index) => {
+    const start = match.index ?? 0;
+    const end = storyOpenings[index + 1]?.index ?? storyRegionEnd;
+    return home.slice(start, end);
+  });
+  assert.equal(storySlices.length, 5);
+  for (const [index, story] of storySlices.entries()) {
+    assert.equal(count(story, /\bdata-story-stage(?:=["'][^"']*["'])?/gi), 1, `story ${index + 1} stage`);
+  }
   assert.equal(count(home, /<dt>Customer problem<\/dt>/gi), 5);
   assert.equal(count(home, /<dt>Halo mechanism<\/dt>/gi), 5);
   assert.equal(count(home, /<dt>What changes<\/dt>/gi), 5);
+
+  const compatibilityScenes = [...storySlices[0].matchAll(/<article\b[^>]*\bdata-scene=["']([^"']+)["'][^>]*>/gi)];
+  assert.deepEqual(compatibilityScenes.map((match) => match[1]), ["oracle", "mysql", "postgresql"]);
+  assert.equal(new Set(compatibilityScenes.map((match) => match[1])).size, 3);
+
+  const storyButtons = storySlices.flatMap((story) => [...story.matchAll(/<button\b[^>]*>/gi)].map((match) => match[0]));
+  assert.equal(storyButtons.length, 8);
+  assert.equal(storyButtons.filter((tag) => /\bdata-story-replay\b/i.test(tag)).length, 5);
+  assert.equal(storyButtons.filter((tag) => /\bdata-story-jump=["'][^"']+["']/i.test(tag)).length, 3);
+  assert.ok(storyButtons.every((tag) => /\bdata-story-(?:replay|jump)\b/i.test(tag)));
+  assert.equal(count(home, /class=["']home-mobile-swipe-cue["']/gi), 4);
+  assert.match(home, /Restart[\s\S]*?from Oracle/i);
 
   assert.match(home, /<figure[^>]*aria-labelledby=["']hero-engine-heading["'][^>]*class=["'][^"']*halo-database-flow/i);
   assert.match(home, /Three operating modes\. One Halo foundation\./i);
   assert.match(home, /Halo 1\.0\.16[\s\S]*?supports[\s\S]*?Oracle[\s\S]*?MySQL[\s\S]*?PostgreSQL[\s\S]*?operating modes within one cluster/i);
   assert.doesNotMatch(home, /Halo platform signals|home-hero-facts/i);
-  assert.match(home, /See what changes inside Halo\./i);
+  assert.match(home, /Scroll through the decisions inside Halo\./i);
+  assert.match(home, /On desktop, scroll drives each demonstration; on mobile, swipe concise step tracks\. Controls only restart or jump to a chapter\./i);
   assert.match(home, /COMPATIBILITY[\s\S]*?MIGRATION[\s\S]*?HIGH AVAILABILITY[\s\S]*?READ \/ WRITE ROUTING[\s\S]*?SHARDING/i);
   assert.match(home, /Keep expected application behavior in view\.[\s\S]*?Turn hidden dependencies into decisions\.[\s\S]*?Move a role only after the control path agrees\.[\s\S]*?Let database semantics choose the path\.[\s\S]*?Route a partition to the data that owns its range\./i);
   assert.match(home, /protocol, parsing and semantics, optimization, and execution/i);
-  assert.match(home, /Retain for workload verification[\s\S]*?Verify the behavior that matters[\s\S]*?Remediate or leave unresolved/i);
-  assert.match(home, /Quorum \+ leader state[\s\S]*?Fencing[\s\S]*?Eligible replica/i);
+  assert.match(home, /Capture SQL, objects, procedural logic, drivers, tools, and remote dependencies[\s\S]*?Match each dependency to a documented candidate[\s\S]*?Run representative behavior[\s\S]*?Keep remediation and unresolved behavior visible[\s\S]*?Exercise data movement[\s\S]*?Proceed, remediate, or stop/i);
+  assert.match(home, /etcd quorum \+ leader state[\s\S]*?FENCED BEFORE MOVE[\s\S]*?Eligibility checked/i);
   assert.match(home, /Statement semantics[\s\S]*?Transaction state[\s\S]*?Object type/i);
-  assert.match(home, /Partition map[\s\S]*?match predicate[\s\S]*?prune unrelated partitions[\s\S]*?route mapped partition[\s\S]*?push down relevant work/i);
+  assert.match(home, /Partition map[\s\S]*?match bound[\s\S]*?prune unrelated[\s\S]*?route mapped partition[\s\S]*?push down work/i);
   assert.match(home, /manual-reported Oracle-related application code-change reduction/);
   assert.match(home, /Explore E5 and operating modes[\s\S]*?Follow the Oracle migration path[\s\S]*?Review continuity and Shield[\s\S]*?Inspect TWR boundaries[\s\S]*?Explore HDS placement/i);
+  assert.match(home, /Oracle is a documented behavior surface rather than a blanket equivalence claim/i);
+  assert.match(home, /not a claim that Halo provides an automated migration tool/i);
+  assert.match(home, /no RPO, RTO, zero-loss, zero-downtime, or SLA result is implied/i);
+  assert.match(home, /TWR is represented as database-aware classification inside Halo, not as an external proxy or a performance guarantee/i);
+  assert.match(home, /The range map is illustrative\. Pruning depends on predicates and partition mapping/i);
   assert.doesNotMatch(home, /Follow one workload through Halo|HALO SYSTEM IN MOTION|Let one commit expose the durability chain/i);
 
   assert.match(home, /2012[\s\S]*?≥95%[\s\S]*?45/i);
@@ -696,17 +737,7 @@ test("ships five independent mechanism explainers as accessible progressive enha
   assert.equal(count(notFound, /class=["']experience-progress["']/gi), 1);
   assert.equal(count(notFound, /class=["']experience-cursor["']/gi), 1);
 
-  assert.match(css, /Homepage separated mechanism narratives — five problems, five visual grammars/);
   assert.doesNotMatch(css, /Homepage continuous system narrative|home-technology-story--continuous|home-system-canvas|home-runtime-map/);
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.home-migration-sorter i,[\s\S]*?animation:\s*none;/);
-  assert.match(css, /@media \(forced-colors: active\)[\s\S]*?\.home-mechanism-controls button\[aria-pressed="true"\],[\s\S]*?background:\s*Highlight;/);
-  assert.match(css, /@media \(scripting: none\)[\s\S]*?\.home-mechanism-controls\s*\{[^}]*display:\s*none;/);
-  assert.match(css, /@media print[\s\S]*?\.home-mechanism-section\s*\{[^}]*overflow:\s*visible;/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.home-compatibility-pipeline\s*\{[^}]*grid-template-columns:\s*1fr;/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.home-migration-board\s*\{[^}]*grid-template-columns:\s*1fr;/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.home-availability-topology\s*\{[^}]*grid-template-columns:\s*1fr;/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.home-routing-stage\s*\{[^}]*grid-template-columns:\s*1fr;/);
-  assert.match(css, /@media \(max-width: 760px\)[\s\S]*?\.home-sharding-explainer\s*\{[^}]*grid-template-columns:\s*1fr;/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.data-flow-packet,[\s\S]*?animation:\s*none;/);
   assert.match(css, /@media \(forced-colors: active\)[\s\S]*?\.halo-database-flow,[\s\S]*?display:\s*none;/);
   assert.match(css, /@media print[\s\S]*?\.halo-database-flow,[\s\S]*?display:\s*none !important;/);
@@ -737,13 +768,32 @@ test("ships five independent mechanism explainers as accessible progressive enha
   assert.match(homeStory, /function ShardingSection/);
   assert.match(homeStory, /function requireNode/);
   assert.match(homeStory, /needs problem, mechanism, and result copy/);
-  assert.match(homeStory, /label="Choose a Halo operating mode"/);
-  assert.match(homeStory, /label="Choose a Shield role-change stage"/);
-  assert.match(homeStory, /label="Choose a TWR routing example"/);
-  assert.match(homeStory, /aria-label="Choose a partition range"/);
-  assert.match(homeStory, /onPointerEnter/);
-  assert.doesNotMatch(homeStory, /onFocus|IntersectionObserver|addEventListener|scrollIntoView|requestAnimationFrame|<canvas/);
+  assert.equal(count(homeStory, /data-scroll-story=/g), 5);
+  assert.equal(count(homeStory, /data-story-stage/g), 5);
+  assert.equal(count(homeStory, /data-story-replay/g), 1);
+  assert.equal(count(homeStory, /data-story-jump=/g), 3);
+  assert.match(homeStory, /<HomeStoryMotionClient \/>/);
+  assert.doesNotMatch(homeStory, /onPointerEnter|onFocus|<canvas/);
   assert.doesNotMatch(homeStory, /HaloSystemCanvas|sceneSnapshot|sceneForLabel|manualSceneRef|manualSelectionLockedRef/);
+
+  assert.match(homeStoryMotion, /import\("gsap"\)/);
+  assert.match(homeStoryMotion, /import\("gsap\/ScrollTrigger"\)/);
+  assert.match(homeStoryMotion, /gsap\.registerPlugin\(ScrollTrigger\)/);
+  assert.match(homeStoryMotion, /ScrollTrigger\.create\(\{/);
+  assert.match(homeStoryMotion, /pin:\s*stage/);
+  assert.match(homeStoryMotion, /scrub:\s*0\.55/);
+  assert.match(homeStoryMotion, /const snapPoints = Object\.values\(timeline\.labels\)/);
+  assert.match(homeStoryMotion, /snap:\s*\{[^}]*snapTo:\s*snapPoints/s);
+  assert.match(homeStoryMotion, /window\.matchMedia\("\(min-width: 900px\) and \(pointer: fine\)"\)/);
+  assert.match(homeStoryMotion, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
+  assert.match(homeStoryMotion, /connection\?\.saveData !== true/);
+  assert.match(homeStoryMotion, /desktop\.matches\s*&&\s*!reduced\.matches/);
+  assert.match(homeStoryMotion, /!slowUpdate\.matches/);
+  assert.match(homeStoryMotion, /!constrainedDevice/);
+  assert.match(homeStoryMotion, /if \(!eligible\(\)\) return/);
+  assert.match(homeStoryMotion, /story\.querySelectorAll<HTMLElement>\("\[data-story-jump\]"\)/);
+  assert.match(homeStoryMotion, /story\.querySelectorAll<HTMLElement>\("\[data-story-replay\]"\)/);
+  assert.match(homeStoryMotion, /context\.revert\(\)/);
 
   assert.match(experienceLayer, /IntersectionObserver/);
   assert.match(experienceLayer, /revealObserver\.disconnect\(\)/);
@@ -753,5 +803,6 @@ test("ships five independent mechanism explainers as accessible progressive enha
   assert.match(experienceLayer, /addEventListener\("change", applyExperienceMode\)/);
   assert.match(experienceLayer, /removeEventListener\("pointermove"/);
   assert.match(experienceLayer, /aria-hidden="true"/);
-  assert.doesNotMatch(packageJson, /framer-motion|\bmotion\b|gsap|three|spline/i);
+  assert.match(packageJson, /"gsap": "3\.15\.0"/);
+  assert.doesNotMatch(packageJson, /framer-motion|\bmotion\b|three|spline/i);
 });

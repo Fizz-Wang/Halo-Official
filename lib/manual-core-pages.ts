@@ -31,7 +31,7 @@ export const manualCorePages = [
         type: "facts",
         heading: "The documented platform at a glance",
         items: [
-          { value: "3", label: "operating modes", body: "Oracle, MySQL, and native PostgreSQL paths can coexist in one instance." },
+          { value: "3", label: "operating modes", body: "Oracle, MySQL, and PostgreSQL operating modes are documented within one cluster." },
           { value: "4", label: "E5 layers", body: "Protocol, parsing and semantics, optimization, and execution." },
           { value: "6", label: "core index methods", body: "B-tree, Hash, GiST, SP-GiST, GIN, and BRIN." },
           { value: "45", label: "documented extensions", body: "Grouped across data, integration, security, and diagnostics." },
@@ -117,7 +117,7 @@ export const manualCorePages = [
           { heading: "2021 — Halo 1.0.13", body: ["The first V1 release extended Oracle-oriented procedural compatibility."] },
           { heading: "2022 — First LTS", body: ["Halo 1.0.14 introduced E5, GB18030 support, PL/SQL Package capability, and MySQL protocol and syntax support."] },
           { heading: "2023 — Halo 1.0.15", body: ["Procedural and Oracle sequence behavior continued to expand."] },
-          { heading: "June 2024 — Second LTS", body: ["Halo 1.0.16 documented multiple operating modes in one instance and additional distributed components. The enterprise kernel lineage was later released as openHalo."] },
+          { heading: "June 2024 — Second LTS", body: ["Halo 1.0.16 documented Oracle, MySQL, and PostgreSQL operating modes within one cluster and additional distributed components. The enterprise kernel lineage was later released as openHalo."] },
         ],
       },
       {

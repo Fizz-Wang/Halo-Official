@@ -425,7 +425,7 @@ const legacySitePages = [
     hero: {
       eyebrow: "HALO DATABASE",
       h1: "Bring mixed database workloads onto one Halo platform.",
-      lead: "Halo is a general-purpose database built on the openHalo kernel. One instance can expose Oracle, MySQL, and native PostgreSQL operating modes through independent endpoints, while enterprise services cover migration, recovery, read scaling, distributed data, and day-to-day operations.",
+      lead: "Halo is a general-purpose database built on the openHalo kernel. Halo 1.0.16 documents Oracle, MySQL, and PostgreSQL operating modes within one cluster, while enterprise services cover migration, recovery, read scaling, distributed data, and day-to-day operations.",
       actions: [
         {
           label: "Explore the platform",

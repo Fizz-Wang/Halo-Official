@@ -14,7 +14,7 @@ import {
   normalizeInternalPath,
 } from "./linkActivation";
 
-const COMPACT_NAVIGATION_QUERY = "(max-width: 1399px)";
+const COMPACT_NAVIGATION_QUERY = "(max-width: 1199px)";
 
 export interface HeaderLink {
   kind: "link";

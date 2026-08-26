@@ -1,28 +1,8 @@
-"use client";
-
-import { useState } from "react";
-
 export interface HaloDatabaseFlowProps {
   variant?: "primary" | "ambient" | "reduced";
 }
 
-const HOME_MODES = [
-  {
-    id: "oracle",
-    label: "Oracle",
-    description: "Test documented Oracle-oriented behavior against the application you actually run.",
-  },
-  {
-    id: "mysql",
-    label: "MySQL",
-    description: "Test the documented MySQL operating-mode behavior required by the workload and tools.",
-  },
-  {
-    id: "postgresql",
-    label: "PostgreSQL",
-    description: "Test PostgreSQL operating-mode behavior in the same versioned Halo target.",
-  },
-] as const;
+const HOME_MODES = ["Oracle", "MySQL", "PostgreSQL"] as const;
 
 function DataStack({ standby = false }: { standby?: boolean }) {
   return (
@@ -40,65 +20,51 @@ function DataStack({ standby = false }: { standby?: boolean }) {
 export function HaloDatabaseFlow({
   variant = "primary",
 }: HaloDatabaseFlowProps) {
-  const [activeMode, setActiveMode] = useState<(typeof HOME_MODES)[number]["id"]>("oracle");
-  const selectedMode = HOME_MODES.find((mode) => mode.id === activeMode) ?? HOME_MODES[0];
-
   if (variant === "primary") {
     return (
       <figure
-        aria-labelledby="hero-mode-flow-heading"
-        className="halo-database-flow halo-database-flow--primary halo-mode-flow"
+        aria-labelledby="hero-engine-heading"
+        className="halo-database-flow halo-database-flow--primary halo-engine-flow"
       >
-        <div className="halo-mode-flow-head">
+        <div className="halo-engine-head">
           <div>
-            <span>WORKLOAD LENS</span>
-            <strong id="hero-mode-flow-heading">3 operating modes. One Halo cluster.</strong>
+            <span>WORKLOAD TRACE</span>
+            <strong id="hero-engine-heading">Watch one workload continue through Halo.</strong>
           </div>
           <span>HALO 1.0.16</span>
         </div>
 
-        <div aria-label="Choose an operating mode" className="halo-mode-switch" role="group">
+        <div aria-label="Application-facing operating modes" className="halo-engine-switch" role="list">
           {HOME_MODES.map((mode) => (
-            <button
-              aria-pressed={activeMode === mode.id}
-              key={mode.id}
-              onClick={() => setActiveMode(mode.id)}
-              onFocus={() => setActiveMode(mode.id)}
-              onPointerEnter={() => setActiveMode(mode.id)}
-              type="button"
-            >
-              {mode.label}
-            </button>
+            <span key={mode} role="listitem">{mode}</span>
           ))}
         </div>
 
-        <div aria-hidden="true" className="halo-mode-visual" data-mode={activeMode} key={activeMode}>
-          <div className="halo-mode-sources">
-            <span>Application</span>
-            <i />
-            <i />
-            <i />
+        <div aria-hidden="true" className="halo-engine-path">
+          <div className="halo-engine-source">
+            <small>START</small>
+            <strong>Application behavior</strong>
+            <span>Oracle · MySQL · PostgreSQL</span>
           </div>
-          <span className="halo-mode-route"><i /></span>
-          <div className="halo-mode-cluster">
-            <small>ONE CLUSTER</small>
-            <div className="halo-mode-rings"><i /><i /><i /></div>
-            <strong>Halo Database</strong>
-            <span>{selectedMode.label} mode</span>
+          <span className="halo-engine-route"><i /></span>
+          <div className="halo-engine-layers">
+            <small>ONE PLATFORM</small>
+            <span><b>01</b>E5 compatibility</span>
+            <span><b>02</b>Transactions + WAL</span>
+            <span><b>03</b>Storage + recovery</span>
           </div>
-          <span className="halo-mode-route halo-mode-route--out"><i /></span>
-          <div className="halo-mode-evidence">
-            <small>WORKLOAD EVIDENCE</small>
-            <span>Behavior</span>
-            <span>Operations</span>
-            <span>Decision</span>
+          <span className="halo-engine-route halo-engine-route--out"><i /></span>
+          <div className="halo-engine-kernel">
+            <small>TRACE</small>
+            <strong>Workload lifecycle</strong>
+            <span>Assess · run · recover · scale</span>
           </div>
         </div>
 
         <figcaption>
-          <strong>{selectedMode.label} workload view</strong>
-          <span>{selectedMode.description}</span>
-          <small>Mode support is a versioned test surface—not a promise that every application moves unchanged.</small>
+          <strong>Start with application behavior.</strong>
+          <span>Then follow what changes inside the system.</span>
+          <small>Halo 1.0.16 documents Oracle, MySQL, and PostgreSQL operating modes within one cluster; exact coverage remains workload-specific.</small>
         </figcaption>
       </figure>
     );

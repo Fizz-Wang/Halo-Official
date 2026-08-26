@@ -7,7 +7,7 @@ export * from "./ExperienceLayer";
 export * from "./Footer";
 export * from "./Header";
 export * from "./HaloDatabaseFlow";
-export * from "./HomeTechnologyStory";
+export * from "./HomeTechnologyStoryV2";
 export * from "./ScrollableRegion";
 export * from "./SkipLink";
 export * from "./States";

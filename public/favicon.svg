@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="halo" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2FD2E2" />
+      <stop offset="1" stop-color="#7567FF" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#08111F" />
+  <path d="M17 18v28h8V35h14v11h8V18h-8v10H25V18z" fill="#F7FAFF" />
+  <path d="M12 10h40" stroke="url(#halo)" stroke-width="4" stroke-linecap="round" />
+</svg>

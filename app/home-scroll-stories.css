@@ -1,9 +1,3 @@
-@property --story-progress {
-  syntax: "<number>";
-  inherits: false;
-  initial-value: 0;
-}
-
 /* Scroll stories: readable HTML first, immersive motion only after enhancement. */
 .home-scroll-story {
   --story-accent: var(--mechanism-accent);
@@ -884,6 +878,14 @@
   list-style: none;
 }
 
+.home-story-step-sequence {
+  min-width: 0;
+}
+
+.home-story-step-detail {
+  display: none;
+}
+
 .home-availability-steps li,
 .home-routing-steps li,
 .home-sharding-steps li {
@@ -1091,6 +1093,7 @@
 
 .home-sharding-space > header,
 .home-sharding-steps,
+.home-sharding-space > .home-story-step-sequence,
 .home-sharding-space > .home-story-note {
   grid-column: 1 / -1;
 }
@@ -1148,6 +1151,10 @@
   color: #0f5b56;
   background: rgba(22, 115, 108, 0.14);
   border-color: rgba(22, 115, 108, 0.44);
+}
+
+.home-sharding-logical > span > i {
+  font-style: normal;
 }
 
 .home-sharding-worker {
@@ -1304,58 +1311,18 @@
   line-height: 1.35;
 }
 
-/* Desktop enhancement. ScrollTrigger adds distance; the stage itself stays fixed. */
-@media (min-width: 900px) and (pointer: fine) {
+/* Desktop structure. Type scale and active-state readability are centralized below. */
+@media (min-width: 1180px) and (min-height: 864px) and (pointer: fine) {
   .story-scroll-ready .home-story-stage {
     height: 100svh;
-    min-height: 700px;
-    overflow: hidden;
   }
 
   .story-scroll-ready .home-story-stage__inner {
     height: 100%;
     min-height: 0;
-    padding-block: clamp(74px, 8.5vh, 102px) clamp(50px, 6vh, 76px);
-  }
-
-  .story-scroll-ready .home-story-copy,
-  .story-scroll-ready .home-compatibility-cinema,
-  .story-scroll-ready .home-migration-timeline,
-  .story-scroll-ready .home-availability-state-machine,
-  .story-scroll-ready .home-routing-switchboard,
-  .story-scroll-ready .home-sharding-space {
-    will-change: transform, opacity;
-  }
-
-  .story-scroll-ready .home-story-heading h3 {
-    font-size: clamp(2.05rem, 3.1vw, 3.75rem);
-  }
-
-  .story-scroll-ready .home-story-causality {
-    margin-top: clamp(22px, 3.2vh, 34px);
-  }
-
-  .story-scroll-ready .home-story-causality > div {
-    grid-template-columns: 102px minmax(0, 1fr);
-    padding-block: 9px;
-  }
-
-  .story-scroll-ready .home-story-causality dd {
-    font-size: 0.76rem;
-    line-height: 1.48;
-  }
-
-  .story-scroll-ready .home-compatibility-cinema,
-  .story-scroll-ready .home-migration-timeline,
-  .story-scroll-ready .home-availability-state-machine,
-  .story-scroll-ready .home-routing-switchboard,
-  .story-scroll-ready .home-sharding-space {
-    height: min(72vh, 680px);
-    min-height: 540px;
   }
 
   .story-scroll-ready .home-compatibility-cinema {
-    min-height: 620px;
     padding: 20px;
     gap: 12px;
   }
@@ -1386,10 +1353,6 @@
 
   .story-scroll-ready .home-mysql-frames {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .story-scroll-ready .home-mysql-frames > span {
-    font-size: 0.57rem;
   }
 
   .story-scroll-ready .home-oracle-entry,
@@ -1423,18 +1386,11 @@
   .story-scroll-ready .home-migration-steps li {
     grid-template-columns: 21px minmax(0, 1fr);
     gap: 5px 6px;
-    min-height: 164px;
-    padding: 9px;
   }
 
   .story-scroll-ready .home-migration-steps li > span {
     width: 21px;
     height: 21px;
-  }
-
-  .story-scroll-ready .home-migration-steps li > small {
-    font-size: 0.54rem;
-    line-height: 1.35;
   }
 
   .story-scroll-ready .home-migration-decision {
@@ -1457,27 +1413,17 @@
     margin-top: 8px;
   }
 
-  .story-scroll-ready .home-availability-steps li,
-  .story-scroll-ready .home-routing-steps li,
-  .story-scroll-ready .home-sharding-steps li {
-    min-height: 78px;
-    padding: 7px;
-  }
-
-  .story-scroll-ready .home-availability-steps li > small,
-  .story-scroll-ready .home-routing-steps li > small,
-  .story-scroll-ready .home-sharding-steps li > small {
-    font-size: 0.44rem;
-    line-height: 1.25;
-  }
-
   .story-scroll-ready .home-routing-canvas {
     min-height: 178px;
     padding-block: 7px;
   }
 
+  .story-scroll-ready .home-routing-targets article {
+    grid-area: 1 / 1;
+  }
+
   .story-scroll-ready .home-routing-switchboard {
-    grid-template-rows: auto 178px 96px 48px auto;
+    grid-template-rows: auto minmax(178px, 1fr) auto auto auto;
   }
 
   .story-scroll-ready .home-routing-connection,
@@ -1499,7 +1445,7 @@
   }
 
   .story-scroll-ready .home-sharding-space {
-    grid-template-rows: auto 92px 92px 46px 72px auto;
+    grid-template-rows: auto 92px 112px 46px auto auto;
   }
 
   .story-scroll-ready .home-sharding-query {
@@ -1517,7 +1463,8 @@
     grid-row: 4;
   }
 
-  .story-scroll-ready .home-sharding-steps {
+  .story-scroll-ready .home-sharding-space > .home-story-step-sequence {
+    grid-column: 1 / -1;
     grid-row: 5;
   }
 
@@ -1528,20 +1475,10 @@
   .story-scroll-ready .home-story-progress {
     position: absolute;
     z-index: 12;
-    top: 50%;
-    right: max(13px, calc((100vw - 1500px) / 2));
-    display: grid;
-    grid-template-columns: 2px auto;
-    align-items: center;
-    gap: 11px;
-    color: color-mix(in srgb, var(--mechanism-copy) 78%, transparent);
-    transform: translateY(-50%);
   }
 
   .story-scroll-ready .home-story-progress__track {
     position: relative;
-    width: 2px;
-    height: 148px;
     overflow: hidden;
     background: var(--story-border);
   }
@@ -1550,22 +1487,15 @@
     position: absolute;
     inset: 0;
     background: var(--story-accent);
-    transform: scaleY(var(--story-progress));
-    transform-origin: top;
   }
 
   .story-scroll-ready .home-story-progress ol {
-    display: grid;
-    gap: 8px;
     margin: 0;
     padding: 0;
     list-style: none;
   }
 
   .story-scroll-ready .home-story-progress li {
-    display: flex;
-    gap: 7px;
-    font-size: 0.48rem;
     font-weight: 720;
     white-space: nowrap;
   }
@@ -1579,19 +1509,8 @@
   }
 }
 
-/* Mid-size desktops keep the pinned narrative but compress side copy. */
-@media (min-width: 900px) and (max-width: 1180px) {
-  .home-story-stage__inner,
-  .home-story-stage--compatibility .home-story-stage__inner {
-    grid-template-columns: minmax(245px, 0.72fr) minmax(540px, 1.48fr);
-    gap: 28px;
-  }
-
-  .home-story-causality > div {
-    grid-template-columns: 94px minmax(0, 1fr);
-    gap: 10px;
-  }
-
+/* Mid-size compatibility panel keeps its compact kernel column. */
+@media (min-width: 1180px) and (max-width: 1280px) and (min-height: 864px) and (pointer: fine) {
   .home-compatibility-cinema {
     grid-template-columns: minmax(0, 1fr) 156px;
   }
@@ -1599,17 +1518,10 @@
   .home-compat-kernel {
     padding-inline: 13px;
   }
-
-  .home-migration-steps li,
-  .home-availability-steps li,
-  .home-routing-steps li,
-  .home-sharding-steps li {
-    padding: 8px;
-  }
 }
 
-/* Mobile/coarse pointer: independent concise stepped story, never a compressed pin. */
-@media (max-width: 899px), (pointer: coarse) {
+/* Mobile/coarse-pointer structure; readable type metrics are centralized below. */
+@media (max-width: 1179px), (max-height: 863px), (pointer: coarse) {
   .home-technology-journeys-intro {
     padding-block: 84px 70px;
   }
@@ -1621,13 +1533,7 @@
   .home-story-stage__inner,
   .home-story-stage--compatibility .home-story-stage__inner {
     display: block;
-    width: min(100% - 32px, 760px);
     min-height: 0;
-    padding-block: 74px;
-  }
-
-  .home-story-heading h3 {
-    font-size: clamp(2.35rem, 11vw, 4.2rem);
   }
 
   .home-story-copy {
@@ -1711,8 +1617,8 @@
     grid-auto-columns: min(82vw, 560px);
     gap: 12px;
     min-height: 0;
-    margin-inline: -20px;
-    padding: 2px 20px 12px;
+    margin-inline: -8px;
+    padding: 2px 8px 12px;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
     scroll-snap-type: inline mandatory;
@@ -1722,7 +1628,6 @@
 
   .home-compat-scene,
   .home-compat-scene + .home-compat-scene {
-    min-height: 470px;
     margin: 0;
     scroll-snap-align: start;
   }
@@ -1777,8 +1682,8 @@
     grid-auto-columns: min(76vw, 390px);
     grid-template-columns: none;
     gap: 9px;
-    margin: 16px -20px 0;
-    padding: 2px 20px 13px;
+    margin: 16px -8px 0;
+    padding: 2px 8px 13px;
     overflow-x: auto;
     overscroll-behavior-inline: contain;
     scroll-snap-type: inline mandatory;
@@ -1797,56 +1702,13 @@
   .home-availability-steps li,
   .home-routing-steps li,
   .home-sharding-steps li {
-    min-height: 180px;
-    padding: 14px;
     border: 1px solid var(--story-border);
     border-radius: 12px;
     scroll-snap-align: start;
   }
 
-  .home-migration-steps li > span,
-  .home-availability-steps li > span,
-  .home-routing-steps li > span,
-  .home-sharding-steps li > span {
-    font-size: 0.62rem;
-  }
-
-  .home-migration-steps li > strong,
-  .home-availability-steps li > strong,
-  .home-routing-steps li > strong,
-  .home-sharding-steps li > strong {
-    font-size: 0.78rem;
-  }
-
-  .home-migration-steps li > small,
-  .home-availability-steps li > small,
-  .home-routing-steps li > small,
-  .home-sharding-steps li > small {
-    font-size: 0.72rem;
-    line-height: 1.45;
-  }
-
-  .home-migration-steps li > i {
-    font-size: 0.58rem;
-  }
-
   .home-sharding-steps li > small {
     color: #435d5b;
-  }
-
-  .home-scroll-story .home-availability-machine small,
-  .home-scroll-story .home-routing-canvas small,
-  .home-scroll-story .home-sharding-query > small,
-  .home-scroll-story .home-sharding-logical > small,
-  .home-scroll-story .home-sharding-worker > small,
-  .home-scroll-story .home-sharding-nodes article > small,
-  .home-scroll-story .home-sharding-result > small {
-    font-size: 0.65rem;
-    line-height: 1.35;
-  }
-
-  .home-scroll-story .home-sharding-worker li {
-    font-size: 0.68rem;
   }
 
   .home-compat-scenes::-webkit-scrollbar,
@@ -1919,6 +1781,11 @@
     margin-top: 12px;
   }
 
+  .home-routing-result strong {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
   .home-routing-canvas {
     grid-template-columns: 1fr;
     gap: 9px;
@@ -1969,16 +1836,6 @@
 }
 
 @media (max-width: 560px) {
-  .home-story-stage__inner,
-  .home-story-stage--compatibility .home-story-stage__inner {
-    width: calc(100% - 24px);
-  }
-
-  .home-story-causality > div {
-    grid-template-columns: 1fr;
-    gap: 5px;
-  }
-
   .home-oracle-stack,
   .home-mysql-frames {
     grid-template-columns: 1fr;
@@ -1997,8 +1854,722 @@
     min-height: 118px;
   }
 
-  .home-sharding-nodes article strong {
-    font-size: 0.65rem;
+}
+
+/* Readability pass: larger type, fewer simultaneous explanations, and a height-aware stage. */
+.home-scroll-story :is(
+  .home-story-heading > p,
+  .home-story-causality dt,
+  .home-story-replay,
+  .home-story-link,
+  .home-story-note summary,
+  .home-mobile-swipe-cue,
+  .home-cinema-heading > span,
+  .home-migration-timeline > header > span,
+  .home-availability-state-machine > header > span,
+  .home-routing-switchboard > header > span,
+  .home-sharding-space > header > span
+) {
+  letter-spacing: 0.035em;
+  text-transform: none;
+}
+
+.home-scroll-story .home-story-heading > p {
+  margin-bottom: 20px;
+  font-size: max(0.94rem, 15px);
+  line-height: 1.35;
+}
+
+.home-scroll-story .home-story-heading h3 {
+  font-size: clamp(2.65rem, 4.45vw, 4.85rem);
+  line-height: 1;
+}
+
+.home-scroll-story .home-story-causality > div {
+  grid-template-columns: minmax(116px, 132px) minmax(0, 1fr);
+  gap: 20px;
+  padding-block: 18px;
+}
+
+.home-scroll-story .home-story-causality dt {
+  color: color-mix(in srgb, var(--story-accent) 92%, var(--mechanism-ink));
+  font-size: max(0.8rem, 12px);
+  line-height: 1.4;
+  text-transform: none;
+}
+
+.home-scroll-story .home-story-causality dd {
+  color: color-mix(in srgb, var(--mechanism-copy) 90%, var(--mechanism-ink));
+  font-size: max(1rem, 16px);
+  line-height: 1.58;
+}
+
+.home-scroll-story .home-story-replay,
+.home-scroll-story .home-compat-mode-jump button {
+  min-height: 46px;
+  padding: 10px 15px;
+  font-size: max(0.94rem, 16px);
+}
+
+.home-scroll-story .home-compat-mode-jump button span {
+  font-size: max(0.76rem, 12px);
+}
+
+.home-scroll-story .home-story-link {
+  min-height: 44px;
+  font-size: max(0.94rem, 16px);
+}
+
+.home-scroll-story .home-story-note {
+  color: color-mix(in srgb, var(--mechanism-copy) 90%, var(--mechanism-ink));
+  font-size: max(0.9rem, 15px);
+  line-height: 1.58;
+}
+
+.home-scroll-story .home-story-note summary {
+  min-height: 46px;
+  font-size: max(0.8rem, 13px);
+  letter-spacing: 0.035em;
+  text-transform: none;
+}
+
+.home-scroll-story :is(
+  .home-cinema-heading > span,
+  .home-migration-timeline > header > span,
+  .home-availability-state-machine > header > span,
+  .home-routing-switchboard > header > span,
+  .home-sharding-space > header > span
+) {
+  font-size: max(0.78rem, 12px);
+  line-height: 1.4;
+}
+
+.home-scroll-story :is(
+  .home-cinema-heading h4,
+  .home-migration-timeline > header h4,
+  .home-availability-state-machine > header h4,
+  .home-routing-switchboard > header h4,
+  .home-sharding-space > header h4
+) {
+  font-size: clamp(1.55rem, 2.3vw, 2.45rem);
+  line-height: 1.12;
+}
+
+.home-scroll-story .home-compat-scene > header small,
+.home-scroll-story .home-compat-kernel small,
+.home-scroll-story .home-oracle-stack small,
+.home-scroll-story .home-mysql-frames small,
+.home-scroll-story .home-postgres-plan small,
+.home-scroll-story .home-oracle-entry small,
+.home-scroll-story .home-mysql-protocol small,
+.home-scroll-story .home-postgres-native > span,
+.home-scroll-story .home-oracle-controls small {
+  font-size: max(0.76rem, 12px);
+  letter-spacing: 0.035em;
+  line-height: 1.35;
+}
+
+.home-scroll-story :is(
+  .home-oracle-stack > span,
+  .home-mysql-frames > span,
+  .home-postgres-plan > span,
+  .home-oracle-entry > span,
+  .home-mysql-protocol > span,
+  .home-oracle-controls span,
+  .home-mysql-clients span,
+  .home-postgres-clients span,
+  .home-compat-kernel li,
+  .home-compat-conclusion
+) {
+  font-size: max(0.8rem, 13px);
+  line-height: 1.42;
+}
+
+.home-scroll-story .home-compat-scenes .home-compat-conclusion {
+  font-size: max(0.9rem, 15px);
+  line-height: 1.5;
+}
+
+.home-scroll-story .home-sharding-nodes article > small {
+  font-size: max(0.76rem, 12px);
+}
+
+.home-scroll-story :is(
+  .home-availability-signal,
+  .home-availability-service-rail small,
+  .home-availability-machine small,
+  .home-routing-canvas small,
+  .home-routing-classifier small,
+  .home-sharding-space small,
+  .home-sharding-nodes small
+) {
+  font-size: max(0.76rem, 12px);
+  letter-spacing: 0.025em;
+  line-height: 1.35;
+}
+
+.home-scroll-story :is(
+  .home-availability-machine strong,
+  .home-routing-canvas strong,
+  .home-routing-classifier strong,
+  .home-sharding-space strong,
+  .home-sharding-nodes strong
+) {
+  font-size: max(0.9rem, 14px);
+  line-height: 1.35;
+}
+
+.home-scroll-story :is(
+  .home-availability-machine span,
+  .home-routing-canvas span,
+  .home-routing-classifier span,
+  .home-sharding-space span,
+  .home-sharding-nodes span,
+  .home-sharding-worker li
+) {
+  font-size: max(0.78rem, 12.5px);
+  line-height: 1.42;
+}
+
+.home-scroll-story .home-availability-primary > span,
+.home-scroll-story .home-availability-gate span {
+  font-size: max(0.75rem, 12px);
+}
+
+.home-scroll-story .home-availability-hold strong {
+  font-size: max(0.82rem, 13px);
+}
+
+.home-scroll-story :is(.home-availability-result, .home-routing-result) {
+  font-size: max(0.9rem, 15px);
+  line-height: 1.45;
+}
+
+.home-scroll-story .home-migration-bundle small,
+.home-scroll-story .home-migration-decision small {
+  font-size: max(0.76rem, 12px);
+  letter-spacing: 0.025em;
+}
+
+.home-scroll-story .home-migration-bundle strong {
+  font-size: max(0.9rem, 14px);
+}
+
+.home-scroll-story .home-migration-decision span {
+  font-size: max(0.8rem, 13px);
+  line-height: 1.2;
+}
+
+@media (min-width: 1180px) and (min-height: 864px) and (pointer: fine) {
+  .story-scroll-ready .home-story-stage {
+    min-height: 864px;
+    overflow: clip;
+  }
+
+  .story-scroll-ready .home-story-stage__inner,
+  .story-scroll-ready .home-story-stage--compatibility .home-story-stage__inner {
+    grid-template-columns: minmax(310px, 0.82fr) minmax(0, 1.55fr);
+    gap: clamp(34px, 4vw, 62px);
+    width: min(1400px, calc(100% - (2 * var(--page-pad))));
+    padding-block: max(calc(var(--header-height) + 24px), clamp(82px, 9vh, 104px)) clamp(54px, 6vh, 76px);
+  }
+
+  .story-scroll-ready .home-story-copy,
+  .story-scroll-ready .home-compatibility-cinema,
+  .story-scroll-ready .home-migration-timeline,
+  .story-scroll-ready .home-availability-state-machine,
+  .story-scroll-ready .home-routing-switchboard,
+  .story-scroll-ready .home-sharding-space {
+    will-change: auto;
+  }
+
+  .story-scroll-ready .home-scroll-story[data-active="true"] :is(
+    .home-story-copy,
+    .home-compatibility-cinema,
+    .home-migration-timeline,
+    .home-availability-state-machine,
+    .home-routing-switchboard,
+    .home-sharding-space
+  ) {
+    will-change: transform, opacity;
+  }
+
+  .story-scroll-ready .home-story-heading h3 {
+    font-size: clamp(2.45rem, 3.25vw, 3.95rem);
+  }
+
+  .story-scroll-ready .home-story-causality {
+    margin-top: clamp(24px, 3.2vh, 36px);
+  }
+
+  .story-scroll-ready .home-story-causality > div {
+    grid-template-columns: minmax(108px, 122px) minmax(0, 1fr);
+    gap: 18px;
+    padding-block: clamp(10px, 1.45vh, 15px);
+  }
+
+  .story-scroll-ready .home-story-causality dd {
+    font-size: max(1rem, 16px);
+    line-height: 1.5;
+  }
+
+  .story-scroll-ready :is(
+    .home-compatibility-cinema,
+    .home-migration-timeline,
+    .home-availability-state-machine,
+    .home-routing-switchboard,
+    .home-sharding-space
+  ) {
+    height: min(72vh, 680px);
+    min-height: 570px;
+  }
+
+  .story-scroll-ready .home-compatibility-cinema {
+    min-height: 610px;
+  }
+
+  .story-scroll-ready :is(
+    .home-migration-steps,
+    .home-availability-steps
+  ) {
+    position: relative;
+    padding-bottom: 76px;
+  }
+
+  .story-scroll-ready .home-migration-steps {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .story-scroll-ready :is(
+    .home-migration-steps li,
+    .home-availability-steps li,
+    .home-routing-steps li,
+    .home-sharding-steps li
+  ) {
+    position: static;
+    align-content: start;
+    min-height: 58px;
+    padding: 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    transition: background-color 160ms ease, border-color 160ms ease;
+  }
+
+  .story-scroll-ready :is(
+    .home-migration-steps li,
+    .home-availability-steps li,
+    .home-routing-steps li,
+    .home-sharding-steps li
+  )[data-current="true"] {
+    background: color-mix(in srgb, var(--story-accent) 10%, var(--story-panel-raised));
+    border-color: color-mix(in srgb, var(--story-accent) 45%, transparent);
+  }
+
+  .story-scroll-ready :is(
+    .home-migration-steps li > span,
+    .home-availability-steps li > span,
+    .home-routing-steps li > span,
+    .home-sharding-steps li > span
+  ) {
+    font-size: max(0.76rem, 12px);
+  }
+
+  .story-scroll-ready :is(
+    .home-migration-steps li > strong,
+    .home-availability-steps li > strong,
+    .home-routing-steps li > strong,
+    .home-sharding-steps li > strong
+  ) {
+    font-size: max(0.95rem, 15px);
+    line-height: 1.3;
+  }
+
+  .story-scroll-ready :is(
+    .home-migration-steps li > small,
+    .home-availability-steps li > small
+  ) {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: none;
+    min-height: 64px;
+    padding: 12px 14px;
+    color: color-mix(in srgb, var(--mechanism-copy) 88%, var(--mechanism-ink));
+    background: color-mix(in srgb, var(--story-panel-raised) 96%, transparent);
+    border-left: 3px solid var(--story-accent);
+    border-radius: 8px;
+    font-size: max(0.84rem, 13px);
+    line-height: 1.42;
+  }
+
+  .story-scroll-ready :is(
+    .home-migration-steps li,
+    .home-availability-steps li
+  )[data-current="true"] > small {
+    display: block;
+  }
+
+  .story-scroll-ready .home-availability-steps li[data-current="true"] > small {
+    color: #c3d8d6;
+    background: #102a32;
+  }
+
+  .story-scroll-ready :is(
+    .home-migration-steps
+  ) li[data-current="true"] > small {
+    color: #405553;
+    background: rgba(255, 255, 255, 0.94);
+  }
+
+  .story-scroll-ready .home-story-step-sequence {
+    display: grid;
+    grid-template-rows: auto minmax(64px, auto);
+    gap: 8px;
+    min-height: 0;
+  }
+
+  .story-scroll-ready .home-routing-switchboard > .home-story-step-sequence {
+    min-height: 170px;
+  }
+
+  .story-scroll-ready .home-sharding-space > .home-story-step-sequence {
+    min-height: 136px;
+  }
+
+  .story-scroll-ready .home-story-step-sequence > :is(.home-routing-steps, .home-sharding-steps) {
+    align-self: start;
+    margin-top: 0;
+    padding-bottom: 0;
+  }
+
+  .story-scroll-ready .home-story-step-sequence :is(.home-routing-steps, .home-sharding-steps) li > small {
+    display: none;
+  }
+
+  .story-scroll-ready .home-story-step-detail {
+    display: grid;
+    min-height: 64px;
+  }
+
+  .story-scroll-ready .home-story-step-detail > p {
+    grid-area: 1 / 1;
+    display: grid;
+    align-content: center;
+    width: 100%;
+    max-width: none;
+    min-height: 64px;
+    margin: 0;
+    padding: 12px 14px;
+    visibility: hidden;
+    color: #405553;
+    background: rgba(255, 255, 255, 0.94);
+    border-left: 3px solid var(--story-accent);
+    border-radius: 8px;
+    opacity: 0;
+    font-size: max(0.9rem, 15px);
+    line-height: 1.45;
+    transition: opacity 160ms ease, visibility 160ms ease;
+  }
+
+  .story-scroll-ready .home-story-step-detail > p[data-current="true"] {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .story-scroll-ready .home-migration-steps li > small {
+    padding-right: 185px;
+  }
+
+  .story-scroll-ready .home-migration-steps li > i {
+    position: absolute;
+    right: 14px;
+    bottom: 23px;
+    display: none;
+    font-size: max(0.76rem, 12px);
+  }
+
+  .story-scroll-ready .home-migration-steps li[data-current="true"] > i {
+    display: block;
+  }
+
+  .story-scroll-ready .home-story-note details[open] {
+    position: static;
+    padding-inline: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .story-scroll-ready .home-story-note details[open] p {
+    max-height: 84px;
+    padding-right: 8px;
+    overflow-y: auto;
+  }
+
+  .story-scroll-ready .home-story-progress {
+    top: calc(var(--header-height) + 14px);
+    right: max(var(--page-pad), calc((100vw - 1400px) / 2));
+    display: flex;
+    grid-template-columns: none;
+    align-items: center;
+    gap: 12px;
+    min-height: 36px;
+    color: color-mix(in srgb, var(--mechanism-copy) 92%, var(--mechanism-ink));
+    transform: none;
+  }
+
+  .story-scroll-ready .home-story-progress__track {
+    width: 92px;
+    height: 3px;
+  }
+
+  .story-scroll-ready .home-story-progress__track i {
+    transform: scaleX(0);
+    transform-origin: left;
+  }
+
+  .story-scroll-ready .home-story-progress ol {
+    display: block;
+  }
+
+  .story-scroll-ready .home-story-progress li {
+    display: none;
+    gap: 8px;
+    font-size: max(0.82rem, 13px);
+    line-height: 1.3;
+  }
+
+  .story-scroll-ready .home-story-progress li[data-current="true"] {
+    display: flex;
+  }
+}
+
+@media (min-width: 1180px) and (max-width: 1399px) and (min-height: 864px) and (pointer: fine) {
+  .story-scroll-ready .home-story-stage__inner,
+  .story-scroll-ready .home-story-stage--compatibility .home-story-stage__inner {
+    grid-template-columns: minmax(420px, 0.95fr) minmax(0, 1.35fr);
+    gap: clamp(30px, 3.4vw, 46px);
+  }
+
+  .story-scroll-ready .home-routing-canvas {
+    grid-template-columns: minmax(110px, 0.8fr) minmax(150px, 1fr) minmax(180px, 1.35fr);
+    gap: clamp(18px, 2vw, 30px);
+  }
+
+  .story-scroll-ready .home-routing-steps {
+    gap: 2px;
+  }
+
+  .story-scroll-ready .home-routing-steps li {
+    padding-inline: 3px;
+  }
+
+  .story-scroll-ready .home-routing-steps li > strong {
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .story-scroll-ready .home-sharding-space {
+    grid-template-columns: minmax(155px, 0.76fr) minmax(155px, 0.78fr) minmax(240px, 1.45fr);
+    grid-template-rows: auto 92px 116px 46px auto auto;
+    padding-inline: 22px;
+  }
+
+  .story-scroll-ready .home-sharding-logical span {
+    padding-inline: 3px;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .story-scroll-ready .home-sharding-logical > span > i {
+    display: none;
+  }
+
+  .story-scroll-ready .home-sharding-nodes article {
+    padding-inline: 4px;
+  }
+
+  .story-scroll-ready .home-sharding-nodes article > span {
+    overflow-wrap: normal;
+    white-space: nowrap;
+    word-break: normal;
+  }
+}
+
+@media (min-width: 1180px) and (min-height: 864px) and (max-height: 889px) and (pointer: fine) {
+  .story-scroll-ready :is(
+    .home-availability-state-machine,
+    .home-routing-switchboard,
+    .home-sharding-space
+  ) {
+    height: min(75vh, 648px);
+    min-height: 630px;
+  }
+
+  .story-scroll-ready .home-story-causality {
+    margin-top: 18px;
+  }
+
+  .story-scroll-ready .home-story-causality > div {
+    padding-block: 8px;
+  }
+
+  .story-scroll-ready .home-story-actions {
+    margin-top: 14px;
+  }
+}
+
+@media (min-width: 1180px) and (min-height: 890px) and (max-height: 939px) and (pointer: fine) {
+  .story-scroll-ready .home-story-causality > div {
+    padding-block: 11px;
+  }
+
+  .story-scroll-ready .home-story-actions {
+    margin-top: 16px;
+  }
+}
+
+@media (max-width: 1179px), (max-height: 863px), (pointer: coarse) {
+  .home-story-stage__inner,
+  .home-story-stage--compatibility .home-story-stage__inner {
+    width: min(100% - 40px, 920px);
+    padding-block: clamp(64px, 9vw, 90px);
+  }
+
+  .home-scroll-story .home-story-heading > p {
+    font-size: max(0.94rem, 15px);
+  }
+
+  .home-scroll-story .home-story-heading h3 {
+    font-size: clamp(2.5rem, 10vw, 4.4rem);
+  }
+
+  .home-scroll-story .home-story-causality dd {
+    font-size: max(1rem, 16px);
+  }
+
+  .home-scroll-story .home-mobile-swipe-cue,
+  .home-compatibility-cinema .home-cinema-heading::after {
+    font-size: max(0.8rem, 13px);
+    letter-spacing: 0.035em;
+    text-transform: none;
+  }
+
+  .home-scroll-story :is(
+    .home-migration-steps li,
+    .home-availability-steps li,
+    .home-routing-steps li,
+    .home-sharding-steps li
+  ) {
+    min-height: 210px;
+    padding: 16px;
+  }
+
+  .home-scroll-story :is(
+    .home-migration-steps li > span,
+    .home-availability-steps li > span,
+    .home-routing-steps li > span,
+    .home-sharding-steps li > span
+  ) {
+    font-size: max(0.78rem, 12px);
+  }
+
+  .home-scroll-story :is(
+    .home-migration-steps li > strong,
+    .home-availability-steps li > strong,
+    .home-routing-steps li > strong,
+    .home-sharding-steps li > strong
+  ) {
+    font-size: max(1rem, 16px);
+    line-height: 1.35;
+  }
+
+  .home-scroll-story :is(
+    .home-migration-steps li > small,
+    .home-availability-steps li > small,
+    .home-routing-steps li > small,
+    .home-sharding-steps li > small
+  ) {
+    font-size: max(0.88rem, 14px);
+    line-height: 1.5;
+  }
+
+  .home-scroll-story .home-migration-steps li > i {
+    font-size: max(0.76rem, 12px);
+  }
+
+  .home-scroll-story :is(.home-compat-scene, .home-compat-scene + .home-compat-scene) {
+    min-height: 500px;
+  }
+
+  .home-scroll-story .home-story-note {
+    font-size: max(0.9rem, 15px);
+  }
+
+  .home-scroll-story .home-story-note details[open] {
+    position: static;
+    padding-inline: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .home-story-stage__inner,
+  .home-story-stage--compatibility .home-story-stage__inner {
+    width: calc(100% - 24px);
+  }
+
+  .home-scroll-story .home-story-causality > div {
+    grid-template-columns: 1fr;
+    gap: 7px;
+  }
+
+  .home-scroll-story .home-story-causality dt {
+    font-size: max(0.8rem, 12px);
+  }
+
+  .home-scroll-story .home-story-causality dd {
+    font-size: max(1rem, 16px);
+  }
+
+  .home-scroll-story .home-compat-kernel ol {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .home-scroll-story .home-compat-kernel li {
+    overflow-wrap: normal;
+    word-break: keep-all;
+  }
+
+  .home-scroll-story :is(
+    .home-migration-steps,
+    .home-availability-steps,
+    .home-routing-steps,
+    .home-sharding-steps
+  ) {
+    grid-auto-columns: min(84vw, 360px);
+  }
+
+  .home-scroll-story .home-sharding-nodes {
+    grid-template-columns: 1fr;
+  }
+
+  .home-scroll-story .home-sharding-nodes article {
+    min-height: 108px;
+  }
+
+  .home-scroll-story .home-sharding-nodes article strong {
+    font-size: max(0.95rem, 15px);
+  }
+
+  .home-scroll-story .home-sharding-nodes article > small {
+    font-size: max(0.76rem, 12px);
   }
 }
 

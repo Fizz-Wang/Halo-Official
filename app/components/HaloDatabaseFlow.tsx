@@ -28,10 +28,10 @@ export function HaloDatabaseFlow({
       >
         <div className="halo-engine-head">
           <div>
-            <span>OPERATING-MODE ENTRY</span>
+            <span>Operating-mode entry</span>
             <strong id="hero-engine-heading">Three operating modes. One Halo foundation.</strong>
           </div>
-          <span>HALO 1.0.16</span>
+          <span>Halo 1.0.16</span>
         </div>
 
         <div aria-label="Application-facing operating modes" className="halo-engine-switch" role="list">

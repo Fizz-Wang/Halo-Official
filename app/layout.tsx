@@ -10,6 +10,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "Halo Database",
     applicationName: "Halo Database",
+    icons: {
+      icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    },
     metadataBase: release.active && release.origin ? new URL(release.origin) : null,
     robots: { index: release.active, follow: true },
   };

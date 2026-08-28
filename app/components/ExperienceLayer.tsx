@@ -15,9 +15,12 @@ function clamp(value: number, min: number, max: number) {
 export function ExperienceLayer() {
   useEffect(() => {
     const root = document.documentElement;
+    const progressTarget = document.querySelector<HTMLElement>(".experience-progress");
+    const cursorTarget = document.querySelector<HTMLElement>(".experience-cursor");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const coarsePointer = window.matchMedia("(pointer: coarse)");
     const saveData = (navigator as ConnectionNavigator).connection?.saveData === true;
+    const nativeScrollTimeline = CSS.supports("animation-timeline: scroll()");
     let staticExperience = reducedMotion.matches || saveData;
     const revealTargets = Array.from(
       document.querySelectorAll<HTMLElement>("[data-reveal]"),
@@ -29,15 +32,22 @@ export function ExperienceLayer() {
     let pointerFrame = 0;
     let pointerX = window.innerWidth / 2;
     let pointerY = window.innerHeight / 2;
+    let scrollable = 1;
+    let scrollListening = false;
     const entryAnimations = new Set<Animation>();
 
     root.classList.add("experience-enhanced");
+    root.classList.toggle("experience-native-scroll", nativeScrollTimeline);
 
     function updateScrollProgress() {
       scrollFrame = 0;
-      const scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       const progress = clamp(window.scrollY / scrollable, 0, 1);
-      root.style.setProperty("--experience-scroll", progress.toFixed(4));
+      if (progressTarget) progressTarget.style.transform = `scaleX(${progress.toFixed(4)})`;
+    }
+
+    function updateScrollMetrics() {
+      scrollable = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      updateScrollProgress();
     }
 
     function requestScrollProgress() {
@@ -45,10 +55,22 @@ export function ExperienceLayer() {
       scrollFrame = window.requestAnimationFrame(updateScrollProgress);
     }
 
+    function requestScrollMetrics() {
+      if (scrollFrame) return;
+      scrollFrame = window.requestAnimationFrame(updateScrollMetrics);
+    }
+
+    function setScrollListening(active: boolean) {
+      if (active === scrollListening) return;
+      scrollListening = active;
+      if (active) window.addEventListener("scroll", requestScrollProgress, { passive: true });
+      else window.removeEventListener("scroll", requestScrollProgress);
+    }
+
     function updatePointer() {
       pointerFrame = 0;
-      root.style.setProperty("--experience-pointer-x", `${pointerX}px`);
-      root.style.setProperty("--experience-pointer-y", `${pointerY}px`);
+      cursorTarget?.style.setProperty("--experience-pointer-x", `${pointerX}px`);
+      cursorTarget?.style.setProperty("--experience-pointer-y", `${pointerY}px`);
     }
 
     function handlePointer(event: PointerEvent) {
@@ -124,6 +146,7 @@ export function ExperienceLayer() {
         revealObserver.disconnect();
         entryAnimations.forEach((animation) => animation.cancel());
         entryAnimations.clear();
+        setScrollListening(false);
         window.removeEventListener("pointermove", handlePointer);
         return;
       }
@@ -136,31 +159,34 @@ export function ExperienceLayer() {
       } else {
         window.addEventListener("pointermove", handlePointer, { passive: true });
       }
+      setScrollListening(!nativeScrollTimeline);
     }
 
-    window.addEventListener("scroll", requestScrollProgress, { passive: true });
-    window.addEventListener("resize", requestScrollProgress, { passive: true });
+    window.addEventListener("resize", requestScrollMetrics, { passive: true });
+    window.addEventListener("halo:scroll-layout", requestScrollMetrics);
     reducedMotion.addEventListener("change", applyExperienceMode);
     coarsePointer.addEventListener("change", applyExperienceMode);
     applyExperienceMode();
-    updateScrollProgress();
+    updateScrollMetrics();
     updatePointer();
 
     return () => {
       root.classList.remove("experience-enhanced");
       root.classList.remove("experience-static");
       root.classList.remove("experience-coarse");
-      root.style.removeProperty("--experience-scroll");
-      root.style.removeProperty("--experience-pointer-x");
-      root.style.removeProperty("--experience-pointer-y");
+      root.classList.remove("experience-native-scroll");
+      progressTarget?.style.removeProperty("transform");
+      cursorTarget?.style.removeProperty("--experience-pointer-x");
+      cursorTarget?.style.removeProperty("--experience-pointer-y");
       window.cancelAnimationFrame(scrollFrame);
       window.cancelAnimationFrame(pointerFrame);
       revealObserver.disconnect();
       entryAnimations.forEach((animation) => animation.cancel());
       entryAnimations.clear();
       tiltCleanups.forEach((cleanup) => cleanup());
-      window.removeEventListener("scroll", requestScrollProgress);
-      window.removeEventListener("resize", requestScrollProgress);
+      setScrollListening(false);
+      window.removeEventListener("resize", requestScrollMetrics);
+      window.removeEventListener("halo:scroll-layout", requestScrollMetrics);
       window.removeEventListener("pointermove", handlePointer);
       reducedMotion.removeEventListener("change", applyExperienceMode);
       coarsePointer.removeEventListener("change", applyExperienceMode);

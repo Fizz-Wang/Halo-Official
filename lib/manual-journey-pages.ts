@@ -16,7 +16,7 @@ export const manualJourneyPages = [
     breadcrumb: [],
     localNavigation: [],
     hero: {
-      eyebrow: "COMPATIBILITY-LED DATABASE MODERNIZATION",
+      eyebrow: "Compatibility-led database modernization",
       h1: "One database. Three ways in.",
       lead: "Halo 1.0.16 supports Oracle, MySQL, and PostgreSQL operating modes within one cluster. Explore compatibility, migration, continuity, and distributed data one mechanism at a time.",
       actions: [
@@ -29,7 +29,7 @@ export const manualJourneyPages = [
       {
         type: "diagram",
         anchor: "technology-story",
-        eyebrow: "FIVE PROBLEMS · FIVE DISTINCT MECHANISMS",
+        eyebrow: "Five problems · Five distinct mechanisms",
         heading: "See what changes inside Halo.",
         intro: [
           "Each section isolates one customer problem, the Halo mechanism that addresses it, and the result a team can evaluate next.",

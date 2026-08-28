@@ -495,7 +495,7 @@ test("keeps every rendered internal destination live and canonically slashed", a
   const hrefs = new Set();
   for (const [path] of activeRoutes) {
     const html = await (await render(path)).text();
-    for (const match of html.matchAll(/\bhref=["']([^"']+)["']/gi)) {
+    for (const match of html.matchAll(/<a\b[^>]*\bhref=["']([^"']+)["']/gi)) {
       const href = match[1].replaceAll("&amp;", "&");
       if (!href.startsWith("/") || href.startsWith("//")) continue;
       const url = new URL(href, "http://localhost");
@@ -753,8 +753,8 @@ test("ships five independent scroll stories as accessible progressive enhancemen
   assert.match(databaseFlow, /Query endpoints/);
   assert.match(databaseFlow, /Halo database/);
   assert.match(databaseFlow, /Readable standby/);
-  assert.match(databaseFlow, /OPERATING-MODE ENTRY/);
-  assert.match(databaseFlow, /HALO 1\.0\.16/);
+  assert.match(databaseFlow, /Operating-mode entry/);
+  assert.match(databaseFlow, /Halo 1\.0\.16/);
   assert.match(databaseFlow, /ONE PLATFORM/);
   assert.match(databaseFlow, /EXECUTION[\s\S]*?Result[\s\S]*?plan · commit · persist/);
   assert.doesNotMatch(databaseFlow, /useState|onClick|aria-pressed/);
@@ -772,6 +772,8 @@ test("ships five independent scroll stories as accessible progressive enhancemen
   assert.equal(count(homeStory, /data-story-stage/g), 5);
   assert.equal(count(homeStory, /data-story-replay/g), 1);
   assert.equal(count(homeStory, /data-story-jump=/g), 3);
+  assert.equal(count(homeStory, /<b className="sr-only">Range <\/b>/g), 3);
+  assert.doesNotMatch(homeStory, /aria-label="Range [ABC]"/);
   assert.match(homeStory, /<HomeStoryMotionClient \/>/);
   assert.doesNotMatch(homeStory, /onPointerEnter|onFocus|<canvas/);
   assert.doesNotMatch(homeStory, /HaloSystemCanvas|sceneSnapshot|sceneForLabel|manualSceneRef|manualSelectionLockedRef/);
@@ -781,10 +783,16 @@ test("ships five independent scroll stories as accessible progressive enhancemen
   assert.match(homeStoryMotion, /gsap\.registerPlugin\(ScrollTrigger\)/);
   assert.match(homeStoryMotion, /ScrollTrigger\.create\(\{/);
   assert.match(homeStoryMotion, /pin:\s*stage/);
-  assert.match(homeStoryMotion, /scrub:\s*0\.55/);
-  assert.match(homeStoryMotion, /const snapPoints = Object\.values\(timeline\.labels\)/);
-  assert.match(homeStoryMotion, /snap:\s*\{[^}]*snapTo:\s*snapPoints/s);
-  assert.match(homeStoryMotion, /window\.matchMedia\("\(min-width: 900px\) and \(pointer: fine\)"\)/);
+  assert.match(homeStoryMotion, /scrub:\s*true/);
+  assert.doesNotMatch(homeStoryMotion, /snap:\s*\{/);
+  assert.match(homeStoryMotion, /timeline\.to\(\{\}, \{ duration: FINAL_STATE_HOLD, ease: "none" \}\)/);
+  assert.match(homeStoryMotion, /window\.addEventListener\("wheel", onWheel, \{ passive: false, capture: true \}\)/);
+  assert.match(homeStoryMotion, /gestureCommitted \|\| transitionActive/);
+  assert.match(homeStoryMotion, /WHEEL_GESTURE_QUIET_MS/);
+  assert.match(homeStoryMotion, /event\.ctrlKey \|\| event\.metaKey/);
+  assert.match(homeStoryMotion, /data-story-stop-y|storyStopY/);
+  assert.doesNotMatch(homeStoryMotion, /behavior:\s*"smooth"/);
+  assert.match(homeStoryMotion, /window\.matchMedia\("\(min-width: 1180px\) and \(min-height: 864px\) and \(pointer: fine\)"\)/);
   assert.match(homeStoryMotion, /window\.matchMedia\("\(prefers-reduced-motion: reduce\)"\)/);
   assert.match(homeStoryMotion, /connection\?\.saveData !== true/);
   assert.match(homeStoryMotion, /desktop\.matches\s*&&\s*!reduced\.matches/);
@@ -793,13 +801,34 @@ test("ships five independent scroll stories as accessible progressive enhancemen
   assert.match(homeStoryMotion, /if \(!eligible\(\)\) return/);
   assert.match(homeStoryMotion, /story\.querySelectorAll<HTMLElement>\("\[data-story-jump\]"\)/);
   assert.match(homeStoryMotion, /story\.querySelectorAll<HTMLElement>\("\[data-story-replay\]"\)/);
-  assert.match(homeStoryMotion, /context\.revert\(\)/);
+  assert.match(homeStoryMotion, /await document\.fonts\.ready/);
+  assert.match(homeStoryMotion, /const setProgress = progressTrack \? gsap\.quickSetter\(progressTrack, "scaleX"\)/);
+  assert.match(homeStoryMotion, /if \(activeIndex === currentChapter\) return/);
+  assert.match(homeStoryMotion, /const syncNearestFrameMetadata = \(progress: number, start: number, end: number\) =>/);
+  assert.match(homeStoryMotion, /if \(story\.dataset\.storyTransitioning === "true"\) return/);
+  assert.match(homeStoryMotion, /syncNearestFrameMetadata\(self\.progress, self\.start, self\.end\)/);
+  assert.match(homeStoryMotion, /const resizeObserver = new ResizeObserver\(requestRefresh\)/);
+  assert.match(homeStoryMotion, /visualViewport\?\.addEventListener\("resize", requestRefresh/);
+  assert.match(homeStoryMotion, /contextRef\.current\?\.revert\(\)/);
+  assert.match(homeStoryMotion, /const emergencyCleanup = \(\) =>/);
+  assert.match(homeStoryMotion, /if \(!triggerBaseline\.has\(trigger\)\) trigger\.kill\(\)/);
+  assert.match(homeStoryMotion, /const transitionDestination = transitionActive \? activeDestination : undefined/);
+  assert.match(homeStoryMotion, /const transitionBoundaryTarget = transitionActive \? activeBoundaryTarget : undefined/);
+  assert.match(homeStoryMotion, /else if \(transitionBoundaryTarget\)/);
+  assert.match(homeStoryMotion, /STORY_FRAME_RESTORE_KEY/);
+  assert.match(homeStoryMotion, /navigation\?\.type !== "reload"/);
+  assert.match(homeStoryMotion, /window\.addEventListener\("pagehide", persistReloadFrame/);
+  assert.match(homeStoryMotion, /const restoreReloadFrame = \(\) =>/);
 
   assert.match(experienceLayer, /IntersectionObserver/);
   assert.match(experienceLayer, /revealObserver\.disconnect\(\)/);
   assert.match(experienceLayer, /connection\?\.saveData/);
   assert.match(experienceLayer, /let staticExperience = reducedMotion\.matches \|\| saveData/);
   assert.match(experienceLayer, /staticExperience \|\| coarsePointer\.matches/);
+  assert.match(experienceLayer, /CSS\.supports\("animation-timeline: scroll\(\)"\)/);
+  assert.match(experienceLayer, /progressTarget\.style\.transform = `scaleX/);
+  assert.match(experienceLayer, /setScrollListening\(!nativeScrollTimeline\)/);
+  assert.doesNotMatch(experienceLayer, /root\.style\.setProperty\("--experience-scroll"/);
   assert.match(experienceLayer, /addEventListener\("change", applyExperienceMode\)/);
   assert.match(experienceLayer, /removeEventListener\("pointermove"/);
   assert.match(experienceLayer, /aria-hidden="true"/);

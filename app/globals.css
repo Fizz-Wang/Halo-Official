@@ -342,12 +342,22 @@
 .halo-engine-route i {
   position: absolute;
   inset: 50% auto auto 0;
+  width: 100%;
+  height: 9px;
+  background: transparent;
+  transform: translateY(-50%) scaleX(0);
+  transform-origin: left center;
+  animation: engine-request 720ms cubic-bezier(0.2, 0.72, 0.2, 1) both;
+}
+
+.halo-engine-route i::after {
+  position: absolute;
+  inset: 0 0 auto auto;
   width: 9px;
   height: 9px;
+  content: "";
   background: var(--engine-accent);
   border-radius: 50%;
-  transform: translateY(-50%);
-  animation: engine-request 720ms cubic-bezier(0.2, 0.72, 0.2, 1) both;
 }
 
 .halo-engine-route--out i {
@@ -355,9 +365,9 @@
 }
 
 @keyframes engine-request {
-  from { left: 0; opacity: 0; }
+  from { opacity: 0; transform: translateY(-50%) scaleX(0); }
   20% { opacity: 1; }
-  to { left: calc(100% - 9px); opacity: 1; }
+  to { opacity: 1; transform: translateY(-50%) scaleX(1); }
 }
 
 .halo-engine-flow figcaption {
@@ -2583,8 +2593,9 @@ h2.callout-label {
 .page-hero--experience::after {
   position: absolute;
   z-index: -1;
-  inset: 0;
-  inline-size: auto;
+  inset-block: 0;
+  inset-inline: -12%;
+  inline-size: 124%;
   aspect-ratio: auto;
   border: 0;
   background:
@@ -3018,12 +3029,12 @@ h2.callout-label {
 
 @keyframes halo-scan-boot {
   from {
-    background-position: 150% 0, 0 0;
     opacity: 0;
+    transform: translate3d(10%, 0, 0);
   }
   to {
-    background-position: -30% 0, 0 0;
     opacity: 0.82;
+    transform: translate3d(-10%, 0, 0);
   }
 }
 
@@ -3232,7 +3243,7 @@ a:hover,
   background: linear-gradient(90deg, var(--experience-cyan), var(--experience-violet));
   box-shadow: 0 0 14px rgb(91 218 255 / 76%);
   pointer-events: none;
-  transform: scaleX(var(--experience-scroll));
+  transform: scaleX(0);
   transform-origin: left center;
 }
 
@@ -8352,8 +8363,8 @@ main[data-page-id="P01"] #workload-evidence.home-evidence-statement {
 
 .home-proof-shell {
   display: grid;
-  grid-template-columns: minmax(280px, 0.75fr) minmax(0, 1.25fr);
-  gap: clamp(56px, 9vw, 144px);
+  grid-template-columns: minmax(320px, 0.82fr) minmax(0, 1.18fr);
+  gap: clamp(48px, 6vw, 96px);
   padding-block: clamp(96px, 10vw, 160px);
 }
 
@@ -9065,4 +9076,138 @@ main[data-page-id="P01"] #workload-evidence.home-evidence-statement {
     background: #fff;
     box-shadow: none;
   }
+}
+
+/* Homepage readability and compositor-scoped motion refinements. */
+@keyframes experience-scroll-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@supports (animation-timeline: scroll()) {
+  .experience-native-scroll .experience-progress {
+    animation: experience-scroll-progress linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+
+.experience-coarse .experience-cursor {
+  display: none;
+}
+
+@media screen {
+  main[data-page-id="P01"] .page-hero--experience .lead {
+    max-inline-size: 42rem;
+    color: #c8d7e7;
+    font-size: clamp(1.08rem, 1.45vw, 1.3rem);
+    line-height: 1.62;
+  }
+
+  main[data-page-id="P01"] .page-hero--experience .button-link,
+  main[data-page-id="P01"] .page-hero--experience .cta-group a {
+    min-block-size: 50px;
+    font-size: 1rem;
+  }
+
+  main[data-page-id="P01"] .page-hero--experience .eyebrow,
+  main[data-page-id="P01"] .home-technology-journeys-intro > p,
+  main[data-page-id="P01"] .home-proof-shell > header > p,
+  main[data-page-id="P01"] .home-commercial-shell > header > p {
+    font-size: max(0.94rem, 15px);
+    letter-spacing: 0.045em;
+  }
+
+  main[data-page-id="P01"] .halo-engine-head span {
+    font-size: max(0.76rem, 12px);
+  }
+
+  main[data-page-id="P01"] .home-proof-shell > header > span,
+  main[data-page-id="P01"] .home-proof-shell dd,
+  main[data-page-id="P01"] .home-commercial-shell > header > span,
+  main[data-page-id="P01"] .home-commercial-shell nav a > small {
+    font-size: 1rem;
+    line-height: 1.62;
+  }
+
+  main[data-page-id="P01"] .home-proof-shell nav a,
+  main[data-page-id="P01"] .home-commercial-shell nav a > strong {
+    font-size: 1.08rem;
+  }
+
+  main[data-page-id="P01"] .home-proof-shell dt span,
+  main[data-page-id="P01"] .home-commercial-shell nav a > span,
+  main[data-page-id="P01"] .home-commercial-shell nav a > b {
+    font-size: 0.86rem;
+    letter-spacing: 0.035em;
+  }
+}
+
+@media screen and (max-width: 420px) {
+  main[data-page-id="P01"] .halo-engine-head,
+  main[data-page-id="P01"] .halo-engine-switch,
+  main[data-page-id="P01"] .halo-engine-path,
+  main[data-page-id="P01"] .halo-engine-flow figcaption {
+    padding-inline: 16px;
+  }
+
+  main[data-page-id="P01"] .halo-engine-path {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 34px auto 34px auto;
+    gap: 8px;
+    min-block-size: 0;
+    padding-block: 18px;
+  }
+
+  main[data-page-id="P01"] .halo-engine-route {
+    inline-size: 1px;
+    block-size: 34px;
+    margin-inline: auto;
+  }
+
+  main[data-page-id="P01"] .halo-engine-route::after {
+    inset: auto auto 0 50%;
+    transform: translateX(-50%) rotate(135deg);
+  }
+
+  main[data-page-id="P01"] .halo-engine-route i {
+    inset: 0 auto auto 50%;
+    inline-size: 9px;
+    block-size: 100%;
+    transform: translateX(-50%) scaleY(0);
+    transform-origin: center top;
+    animation-name: engine-request-vertical;
+  }
+
+  main[data-page-id="P01"] .halo-engine-route i::after {
+    inset: auto 0 0;
+  }
+
+  main[data-page-id="P01"] .halo-engine-source,
+  main[data-page-id="P01"] .halo-engine-kernel {
+    min-block-size: 104px;
+  }
+
+  main[data-page-id="P01"] .halo-engine-source small,
+  main[data-page-id="P01"] .halo-engine-kernel small,
+  main[data-page-id="P01"] .halo-engine-layers small {
+    font-size: 0.75rem;
+  }
+
+  main[data-page-id="P01"] .halo-engine-source strong,
+  main[data-page-id="P01"] .halo-engine-kernel strong,
+  main[data-page-id="P01"] .halo-engine-layers span {
+    font-size: 0.9rem;
+  }
+
+  main[data-page-id="P01"] .halo-engine-source span,
+  main[data-page-id="P01"] .halo-engine-kernel span,
+  main[data-page-id="P01"] .halo-engine-layers b {
+    font-size: 0.78rem;
+  }
+}
+
+@keyframes engine-request-vertical {
+  from { opacity: 0; transform: translateX(-50%) scaleY(0); }
+  20% { opacity: 1; }
+  to { opacity: 1; transform: translateX(-50%) scaleY(1); }
 }

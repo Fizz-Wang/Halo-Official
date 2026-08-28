@@ -32,6 +32,14 @@ const SECTION_LINKS: Readonly<Record<string, { href: string; label: string }>> =
   },
 };
 
+const STORY_DISPLAY_LABELS: Readonly<Record<string, string>> = {
+  COMPATIBILITY: "Compatibility",
+  MIGRATION: "Migration",
+  "HIGH AVAILABILITY": "High availability",
+  "READ / WRITE ROUTING": "Read / write routing",
+  SHARDING: "Sharding",
+};
+
 const ACTION_NOTES: Readonly<Record<string, string>> = {
   "/resources/evaluation-checklist/": "Capture the workload, target topology, tests, owners, and decision criteria.",
   "/oracle-migration-evaluation/": "Turn Oracle dependencies into a versioned fit-and-gap investigation.",
@@ -99,9 +107,10 @@ function requireNode(block: DiagramBlock, label: string): DiagramNode {
 }
 
 function StoryHeading({ index, node }: { index: number; node: DiagramNode }) {
+  const label = node.label?.trim() ?? "";
   return (
     <header className="home-story-heading">
-      <p><span>{String(index).padStart(2, "0")}</span>{node.label}</p>
+      <p><span>{String(index).padStart(2, "0")}</span>{STORY_DISPLAY_LABELS[label.toUpperCase()] ?? label}</p>
       <h3 id={`home-mechanism-${index}-heading`}>{node.heading}</h3>
     </header>
   );
@@ -157,6 +166,36 @@ function MobileSwipeCue() {
   return <p aria-hidden="true" className="home-mobile-swipe-cue">Swipe the steps <span>→</span></p>;
 }
 
+type StoryStep = readonly [index: string, label: string, detail: string];
+
+function StoryStepSequence({
+  className,
+  motionToken,
+  steps,
+}: {
+  className: string;
+  motionToken: string;
+  steps: readonly StoryStep[];
+}) {
+  return (
+    <div className={`home-story-step-sequence home-story-step-sequence--${motionToken}`}>
+      <MobileSwipeCue />
+      <ol className={className}>
+        {steps.map(([index, label, detail]) => (
+          <li data-motion={`${motionToken}-step`} key={index}>
+            <span>{index}</span><strong>{label}</strong><small>{detail}</small>
+          </li>
+        ))}
+      </ol>
+      <div aria-label="Current step explanation" className="home-story-step-detail">
+        {steps.map(([index, label, detail]) => (
+          <p aria-label={`${label}: ${detail}`} data-story-step-detail key={index}>{detail}</p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function StoryProgress({ labels }: { labels: readonly string[] }) {
   return (
     <aside aria-hidden="true" className="home-story-progress">
@@ -171,7 +210,7 @@ function StoryProgress({ labels }: { labels: readonly string[] }) {
 function SharedKernel() {
   return (
     <div className="home-compat-kernel" data-motion="compat-kernel">
-      <small>ONE HALO KERNEL</small>
+      <small>One Halo kernel</small>
       <strong>openHalo foundation</strong>
       <ol aria-label="Shared E5 execution foundation">
         <li>Protocol</li>
@@ -210,7 +249,7 @@ function CompatibilitySection({ node }: { node: DiagramNode }) {
 
           <figure aria-labelledby="compatibility-figure-heading" className="home-compatibility-cinema">
             <header className="home-cinema-heading">
-              <span>SCROLL-DRIVEN COMPATIBILITY PATHS</span>
+              <span>Scroll-driven compatibility paths</span>
               <h4 id="compatibility-figure-heading">Three application ecosystems. One Halo kernel.</h4>
             </header>
             <SharedKernel />
@@ -218,7 +257,7 @@ function CompatibilitySection({ node }: { node: DiagramNode }) {
             <div aria-label="Compatibility mode scenes" className="home-compat-scenes" role="region">
             <article className="home-compat-scene home-compat-scene--oracle is-initial" data-motion="compat-scene" data-scene="oracle">
               <header>
-                <small>ORACLE-ORIENTED BEHAVIOR</small>
+                <small>Oracle-oriented behavior</small>
                 <strong>Expose semantic dependencies before migration.</strong>
               </header>
               <div className="home-oracle-stack" aria-label="Documented Oracle-oriented behavior surface">
@@ -232,12 +271,12 @@ function CompatibilitySection({ node }: { node: DiagramNode }) {
                 ))}
               </div>
               <div className="home-oracle-entry" data-motion="compat-oracle-entry">
-                <small>ORACLE MODE ENTRY</small>
+                <small>Oracle mode entry</small>
                 <strong>Mode extension required</strong>
                 <span>Workload entry remains driver- and build-specific.</span>
               </div>
               <div className="home-oracle-controls" aria-label="Configurable Oracle-oriented semantics">
-                <small>CONFIGURABLE SEMANTICS</small>
+                <small>Configurable semantics</small>
                 <span>NULL comparison</span><span>DATE behavior</span><span>Empty string</span><span>Parser fallback</span>
               </div>
               <p className="home-compat-conclusion">Make the Oracle behavior surface visible for workload-level validation.</p>
@@ -245,7 +284,7 @@ function CompatibilitySection({ node }: { node: DiagramNode }) {
 
             <article className="home-compat-scene home-compat-scene--mysql" data-motion="compat-scene" data-scene="mysql">
               <header>
-                <small>MYSQL PROTOCOL PATH</small>
+                <small>MySQL protocol path</small>
                 <strong>A client handshake becomes a familiar packet stream.</strong>
               </header>
               <div className="home-mysql-clients" aria-label="Documented MySQL client families">
@@ -253,33 +292,33 @@ function CompatibilitySection({ node }: { node: DiagramNode }) {
               </div>
               <div className="home-mysql-wire" aria-hidden="true"><i data-motion="compat-mysql-packet" /><i data-motion="compat-mysql-packet" /><i data-motion="compat-mysql-packet" /></div>
               <div className="home-mysql-protocol" data-motion="compat-mysql-entry">
-                <small>STANDARD MYSQL PROTOCOL</small>
+                <small>Standard MySQL protocol</small>
                 <strong>MySQL mode entry</strong>
                 <span>Mode extension + compatible authentication</span>
               </div>
               <div className="home-mysql-frames" aria-label="Documented MySQL compatibility surfaces">
-                <span data-motion="compat-mysql-frame"><small>TYPE FRAME</small>UNSIGNED · ENUM · SET</span>
-                <span data-motion="compat-mysql-frame"><small>DML FRAME</small>INSERT IGNORE · ON DUPLICATE KEY</span>
-                <span data-motion="compat-mysql-frame"><small>ERROR FRAME</small>MySQL numeric error + SQLSTATE</span>
+                <span data-motion="compat-mysql-frame"><small>Type frame</small>UNSIGNED · ENUM · SET</span>
+                <span data-motion="compat-mysql-frame"><small>DML frame</small>INSERT IGNORE · ON DUPLICATE KEY</span>
+                <span data-motion="compat-mysql-frame"><small>Error frame</small>MySQL numeric error + SQLSTATE</span>
               </div>
               <p className="home-compat-conclusion">A documented MySQL client path reaches familiar types, statements, and protocol semantics.</p>
             </article>
 
             <article className="home-compat-scene home-compat-scene--postgresql" data-motion="compat-scene" data-scene="postgresql">
               <header>
-                <small>NATIVE POSTGRESQL PATH</small>
+                <small>Native PostgreSQL path</small>
                 <strong>No compatibility-extension gate in the path.</strong>
               </header>
               <div className="home-postgres-clients"><span>psql</span><span>JDBC</span></div>
               <div className="home-postgres-native" data-motion="compat-postgres-path">
-                <span>STANDARD POSTGRESQL PROTOCOL</span>
+                <span>Standard PostgreSQL protocol</span>
                 <i aria-hidden="true" />
                 <strong>Native mode · no added compatibility extension</strong>
               </div>
               <div className="home-postgres-plan" aria-label="Documented native PostgreSQL capability families">
-                <span data-motion="compat-postgres-node"><small>DOCUMENT</small>JSONB + GIN</span>
-                <span data-motion="compat-postgres-node"><small>PARTITION</small>RANGE · LIST · HASH</span>
-                <span data-motion="compat-postgres-node"><small>PROCEDURAL</small>PL/pgSQL trigger</span>
+                <span data-motion="compat-postgres-node"><small>Document</small>JSONB + GIN</span>
+                <span data-motion="compat-postgres-node"><small>Partition</small>RANGE · LIST · HASH</span>
+                <span data-motion="compat-postgres-node"><small>Procedural</small>PL/pgSQL trigger</span>
               </div>
               <p className="home-compat-conclusion">The native PostgreSQL path needs no added compatibility extension.</p>
             </article>
@@ -311,12 +350,12 @@ function MigrationSection({ node }: { node: DiagramNode }) {
           </div>
           <figure aria-labelledby="migration-figure-heading" className="home-migration-timeline">
             <header>
-              <span>DEPENDENCY-TO-DECISION TIMELINE</span>
+              <span>Dependency-to-decision timeline</span>
               <h4 id="migration-figure-heading">Move one dependency bundle. Leave evidence at every gate.</h4>
             </header>
             <div className="home-migration-track" aria-hidden="true"><i data-motion="migration-track" /></div>
             <div className="home-migration-bundle" data-motion="migration-bundle">
-              <small>WORKLOAD DEPENDENCY</small>
+              <small>Workload dependency</small>
               <strong>SQL · objects · logic · access</strong>
             </div>
             <MobileSwipeCue />
@@ -329,7 +368,7 @@ function MigrationSection({ node }: { node: DiagramNode }) {
               ))}
             </ol>
             <div className="home-migration-decision" data-motion="migration-decision">
-              <small>EVIDENCE-BASED OUTCOME</small>
+              <small>Evidence-based outcome</small>
               <span data-outcome="proceed">Proceed</span>
               <span data-outcome="remediate">Remediate</span>
               <span data-outcome="stop">Stop</span>
@@ -360,26 +399,26 @@ function AvailabilitySection({ node }: { node: DiagramNode }) {
           </div>
           <figure aria-labelledby="availability-figure-heading" className="home-availability-state-machine">
             <header>
-              <span>CONDITIONAL ROLE-CHANGE STATE MACHINE</span>
+              <span>Conditional role-change state machine</span>
               <h4 id="availability-figure-heading">A fault signal is not permission to move.</h4>
             </header>
-            <div className="home-availability-signal" data-motion="availability-signal"><i /><span>HEALTH SIGNAL</span></div>
+            <div className="home-availability-signal" data-motion="availability-signal"><i /><span>Health signal</span></div>
             <div className="home-availability-service-rail">
-              <small>SERVICE ADDRESS / VIP</small><i data-motion="availability-vip" />
+              <small>Service address / VIP</small><i data-motion="availability-vip" />
             </div>
             <div className="home-availability-machine">
               <article className="home-availability-primary">
-                <small>CURRENT ROLE</small><strong>Read/write primary</strong><span data-motion="availability-fence">FENCED BEFORE MOVE</span>
+                <small>Current role</small><strong>Read/write primary</strong><span data-motion="availability-fence">Fenced before move</span>
               </article>
               <div className="home-availability-gate" data-motion="availability-gate">
-                <small>CONTROL AUTHORITY</small><strong>etcd quorum + leader state</strong>
+                <small>Control authority</small><strong>etcd quorum + leader state</strong>
                 <span>health</span><span>leader lock</span><span>policy</span>
               </div>
               <article className="home-availability-replica" data-motion="availability-replica">
-                <small>REPLICA</small><strong>Eligibility checked</strong><span>Role changes only after the gates pass</span>
+                <small>Replica</small><strong>Eligibility checked</strong><span>Role changes only after the gates pass</span>
               </article>
               <aside className="home-availability-hold" data-motion="availability-hold">
-                <small>NO AUTHORITY OR NO ELIGIBLE REPLICA</small><strong>HOLD · DO NOT MOVE</strong>
+                <small>No authority or no eligible replica</small><strong>Hold · do not move</strong>
               </aside>
             </div>
             <MobileSwipeCue />
@@ -413,28 +452,25 @@ function RoutingSection({ node }: { node: DiagramNode }) {
           </div>
           <figure aria-labelledby="routing-figure-heading" className="home-routing-switchboard">
             <header>
-              <span>DATABASE-AWARE REDIRECTION</span>
+              <span>Database-aware redirection</span>
               <h4 id="routing-figure-heading">One connection. Two semantic paths.</h4>
             </header>
             <div className="home-routing-canvas">
-              <div className="home-routing-connection"><small>ORIGINAL RO CONNECTION</small><strong>Application session</strong></div>
+              <div className="home-routing-connection"><small>Original RO connection</small><strong>Application session</strong></div>
               <div className="home-routing-classifier">
-                <small>TWR · INSIDE HALO</small><strong>Classify before routing</strong>
+                <small>TWR · inside Halo</small><strong>Classify before routing</strong>
                 <span>statement semantics</span><span>transaction state</span><span>object type</span>
               </div>
               <div className="home-routing-targets">
-                <article><small>LOCAL PATH</small><strong>Read-only node</strong><span>Read work stays local.</span></article>
-                <article><small>FORWARDED PATH</small><strong>Read/write node</strong><span>Detected write work executes here.</span></article>
+                <article><small>Local path</small><strong>Read-only node</strong><span>Read work stays local.</span></article>
+                <article><small>Forwarded path</small><strong>Read/write node</strong><span>Detected write work executes here.</span></article>
               </div>
               <i aria-hidden="true" className="home-routing-line home-routing-line--read" data-motion="routing-read-path" />
               <i aria-hidden="true" className="home-routing-line home-routing-line--write" data-motion="routing-write-path" />
               <i aria-hidden="true" className="home-routing-line home-routing-line--return" data-motion="routing-return-path" />
               <span aria-hidden="true" className="home-routing-token" data-motion="routing-token"><b>SQL</b></span>
             </div>
-            <MobileSwipeCue />
-            <ol className="home-routing-steps">
-              {ROUTING_STEPS.map(([index, label, detail]) => <li data-motion="routing-step" key={index}><span>{index}</span><strong>{label}</strong><small>{detail}</small></li>)}
-            </ol>
+            <StoryStepSequence className="home-routing-steps" motionToken="routing" steps={ROUTING_STEPS} />
             <p className="home-routing-result"><strong>Detected write inside a transaction</strong><span>Keep that work on the read/write path for the relevant transaction context.</span></p>
             <FigureNote>TWR is represented as database-aware classification inside Halo, not as an external proxy or a performance guarantee. A transaction is not routed merely because it begins; the illustrated RW path follows detected write work.</FigureNote>
           </figure>
@@ -462,26 +498,29 @@ function ShardingSection({ node }: { node: DiagramNode }) {
           </div>
           <figure aria-labelledby="sharding-figure-heading" className="home-sharding-space">
             <header>
-              <span>PREDICATE-TO-PLACEMENT MAP</span>
+              <span>Predicate-to-placement map</span>
               <h4 id="sharding-figure-heading">Prune the space before remote work moves.</h4>
             </header>
-            <div className="home-sharding-query" data-motion="sharding-query"><small>QUERY PREDICATE</small><strong>customer_id = 42</strong></div>
-            <div className="home-sharding-logical"><small>ONE LOGICAL DATABASE</small><strong>Partitioned parent</strong><span>Range A</span><span data-selected>Range B</span><span>Range C</span></div>
+            <div className="home-sharding-query" data-motion="sharding-query"><small>Query predicate</small><strong>customer_id = 42</strong></div>
+            <div className="home-sharding-logical">
+              <small>One logical database</small>
+              <strong>Partitioned parent</strong>
+              <span><b className="sr-only">Range </b><i aria-hidden="true">Range </i>A</span>
+              <span data-selected><b className="sr-only">Range </b><i aria-hidden="true">Range </i>B</span>
+              <span><b className="sr-only">Range </b><i aria-hidden="true">Range </i>C</span>
+            </div>
             <div className="home-sharding-worker" data-motion="sharding-worker">
-              <small>WORKER</small><strong>Partition map</strong>
+              <small>Worker</small><strong>Partition map</strong>
               <ol><li>match bound</li><li>prune unrelated</li><li>route mapped partition</li><li>push down work</li></ol>
             </div>
             <div className="home-sharding-nodes" role="list">
-              <article data-motion="sharding-pruned" role="listitem"><small>DATA NODE A</small><strong>Earlier range</strong><span>PRUNED</span></article>
-              <article data-motion="sharding-target" role="listitem"><small>DATA NODE B</small><strong>Middle range</strong><span>SELECTED</span></article>
-              <article data-motion="sharding-pruned" role="listitem"><small>DATA NODE C</small><strong>Later range</strong><span>PRUNED</span></article>
+              <article data-motion="sharding-pruned" role="listitem"><small>Data node A</small><strong>Earlier range</strong><span>Pruned</span></article>
+              <article data-motion="sharding-target" role="listitem"><small>Data node B</small><strong>Middle range</strong><span>Selected</span></article>
+              <article data-motion="sharding-pruned" role="listitem"><small>Data node C</small><strong>Later range</strong><span>Pruned</span></article>
             </div>
             <div aria-hidden="true" className="home-sharding-route" data-motion="sharding-route"><i /></div>
-            <div className="home-sharding-result" data-motion="sharding-result"><small>RELEVANT RESULT</small><strong>Range B → Data node B</strong></div>
-            <MobileSwipeCue />
-            <ol className="home-sharding-steps">
-              {HDS_STEPS.map(([index, label, detail]) => <li data-motion="sharding-step" key={index}><span>{index}</span><strong>{label}</strong><small>{detail}</small></li>)}
-            </ol>
+            <div className="home-sharding-result" data-motion="sharding-result"><small>Relevant result</small><strong>Range B → Data node B</strong></div>
+            <StoryStepSequence className="home-sharding-steps" motionToken="sharding" steps={HDS_STEPS} />
             <FigureNote>The range map is illustrative. Pruning depends on predicates and partition mapping. Production evaluation must still cover worker availability, redistribution, resharding, and cross-shard transaction requirements; none is implied here.</FigureNote>
           </figure>
         </div>
@@ -521,7 +560,7 @@ function ProductProof({ block }: { block: FactsBlock }) {
     <section aria-labelledby="product-proof-heading" className="home-product-proof" id={block.anchor}>
       <div className="home-proof-shell">
         <header>
-          <p>PRODUCT PROVENANCE · EVIDENCE BOUNDARY</p>
+          <p>Product provenance · Evidence boundary</p>
           <h2 id="product-proof-heading">{block.heading}</h2>
           {block.intro?.map((paragraph) => <span key={paragraph}>{paragraph}</span>)}
           <nav aria-label="Product provenance links">
@@ -547,7 +586,7 @@ function CommercialPath({ block }: { block: CtaBlock }) {
     <section aria-labelledby="home-commercial-heading" className="home-commercial-path">
       <div className="home-commercial-shell">
         <header>
-          <p>YOUR NEXT MOVE</p>
+          <p>Your next move</p>
           <h2 id="home-commercial-heading">{block.heading}</h2>
           {block.body?.map((paragraph) => <span key={paragraph}>{paragraph}</span>)}
         </header>

@@ -541,14 +541,32 @@ export function HomeStoryMotionClient() {
         let gestureQuietTimer = 0;
         let wheelAccumulator = 0;
         let wheelDirection = 0;
+        let queuedGestureActive = false;
+        let queuedWheelAccumulator = 0;
+        let queuedWheelDirection = 0;
+        let queuedStepDirection = 0;
+        let queuedStepFrame = 0;
         let internalScrollElement: HTMLElement | null = null;
         let internalScrollTimer = 0;
 
         const clearTransitionMarkers = () => {
           motionStories.forEach(({ story }) => { story.dataset.storyTransitioning = "false"; });
         };
+        const resetQueuedGesture = () => {
+          window.cancelAnimationFrame(queuedStepFrame);
+          queuedStepFrame = 0;
+          queuedGestureActive = false;
+          queuedWheelAccumulator = 0;
+          queuedWheelDirection = 0;
+          queuedStepDirection = 0;
+        };
+        const resetQueuedAccumulator = () => {
+          queuedGestureActive = false;
+          queuedWheelAccumulator = 0;
+          queuedWheelDirection = 0;
+        };
         const maybeReleaseGesture = () => {
-          if (!gestureQuiet || transitionActive) return;
+          if (!gestureQuiet || transitionActive || queuedStepDirection || queuedStepFrame) return;
           gestureCommitted = false;
           wheelAccumulator = 0;
           wheelDirection = 0;
@@ -559,6 +577,7 @@ export function HomeStoryMotionClient() {
           gestureQuietTimer = window.setTimeout(() => {
             gestureQuietTimer = 0;
             gestureQuiet = true;
+            if (queuedGestureActive && !queuedStepDirection) resetQueuedAccumulator();
             maybeReleaseGesture();
           }, WHEEL_GESTURE_QUIET_MS);
         };
@@ -569,6 +588,7 @@ export function HomeStoryMotionClient() {
           gestureCommitted = false;
           wheelAccumulator = 0;
           wheelDirection = 0;
+          resetQueuedGesture();
         };
         const clearInternalScrollGesture = () => {
           window.clearTimeout(internalScrollTimer);
@@ -614,7 +634,7 @@ export function HomeStoryMotionClient() {
             activeBoundaryTarget = undefined;
             activeTransitionStories = [];
             clearTransitionMarkers();
-            if (gestureCommitted) scheduleGestureQuiet();
+            if (queuedStepDirection) scheduleQueuedStep(queuedStepDirection);
             else maybeReleaseGesture();
           };
           if (distance <= 1) {
@@ -717,6 +737,37 @@ export function HomeStoryMotionClient() {
           }
           return null;
         };
+        function scheduleQueuedStep(direction: number) {
+          window.cancelAnimationFrame(queuedStepFrame);
+          queuedStepDirection = 0;
+          resetQueuedAccumulator();
+          gestureCommitted = true;
+          queuedStepFrame = window.requestAnimationFrame(() => {
+            queuedStepFrame = 0;
+            if (disposed || run !== generation || transitionActive) return;
+            const contextForWheel = wheelContext(direction);
+            if (!contextForWheel) {
+              maybeReleaseGesture();
+              return;
+            }
+            commitStep(contextForWheel.motionIndex, direction, contextForWheel.entering);
+          });
+        }
+        const accumulateQueuedWheel = (deltaY: number) => {
+          if (queuedStepDirection || queuedStepFrame) return;
+          const direction = Math.sign(deltaY);
+          queuedGestureActive = true;
+          if (direction !== queuedWheelDirection) {
+            queuedWheelAccumulator = 0;
+            queuedWheelDirection = direction;
+          }
+          queuedWheelAccumulator += deltaY;
+          if (Math.abs(queuedWheelAccumulator) < WHEEL_STEP_THRESHOLD) return;
+          queuedStepDirection = direction;
+          queuedWheelAccumulator = 0;
+          queuedWheelDirection = 0;
+          if (!transitionActive) scheduleQueuedStep?.(queuedStepDirection);
+        };
         const onWheel = (event: WheelEvent) => {
           if (event.ctrlKey || event.metaKey) return;
           const delta = normalizedWheelDelta(event);
@@ -724,8 +775,17 @@ export function HomeStoryMotionClient() {
           const consume = () => { if (event.cancelable) event.preventDefault(); };
           if (gestureCommitted || transitionActive) {
             consume();
+            const beginsQueuedGesture = (
+              transitionActive
+              && gestureQuiet
+              && !queuedGestureActive
+              && !queuedStepDirection
+              && !queuedStepFrame
+            );
+            if (beginsQueuedGesture) queuedGestureActive = true;
             gestureCommitted = true;
             scheduleGestureQuiet();
+            if (queuedGestureActive) accumulateQueuedWheel(delta.y);
             return;
           }
           const contextForWheel = wheelContext(delta.y);
@@ -811,7 +871,10 @@ export function HomeStoryMotionClient() {
         let refreshFrame = 0;
         actionCleanups.push(() => window.cancelAnimationFrame(refreshFrame));
         const requestRefresh = () => {
-          if (disposed || run !== generation || refreshFrame) return;
+          if (disposed || run !== generation) return;
+          resetQueuedGesture();
+          maybeReleaseGesture();
+          if (refreshFrame) return;
           refreshFrame = window.requestAnimationFrame(() => {
             refreshFrame = 0;
             if (disposed || run !== generation) return;

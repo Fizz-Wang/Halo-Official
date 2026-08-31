@@ -83,18 +83,18 @@ async function readStoryState(page, storyId) {
   }, { id: storyId, finalSelector: FINAL_TARGETS[storyId] });
 }
 
-async function waitForWheelTail(page, lateTailDelayMs = 0) {
+async function waitForWheelTail(page, tailDurationMs = 0) {
   await page.waitForFunction(
     () => window.__haloWheelTailDone === true,
     undefined,
-    { timeout: Math.max(1_500, lateTailDelayMs + 1_000) },
+    { timeout: Math.max(1_500, tailDurationMs + 1_000) },
   );
 }
 
 async function sendWheelBurst(
   page,
   deltaY,
-  { inertialTail = true, lateTailDelayMs = 0, waitForTail = true } = {},
+  { inertialTail = true, tailSchedule: customTailSchedule, waitForTail = true } = {},
 ) {
   const sign = Math.sign(deltaY) || 1;
   const magnitude = Math.abs(deltaY);
@@ -103,11 +103,11 @@ async function sendWheelBurst(
     await page.mouse.wheel(0, deltaY);
     return;
   }
-  const tailSchedule = [48, 32, 22, 14, 8].map((value, index) => ({
+  const tailSchedule = customTailSchedule ?? [48, 32, 22, 14, 8].map((value, index) => ({
     delay: (index + 1) * 20,
     deltaY: value * sign,
   }));
-  if (lateTailDelayMs > 100) tailSchedule.push({ delay: lateTailDelayMs, deltaY: 48 * sign });
+  const tailDurationMs = Math.max(0, ...tailSchedule.map(({ delay }) => delay));
   await page.evaluate((schedule) => {
     window.__haloWheelTailDone = false;
     window.addEventListener("wheel", () => {
@@ -127,7 +127,25 @@ async function sendWheelBurst(
     }, { capture: true, once: true });
   }, tailSchedule);
   await page.mouse.wheel(0, magnitude * sign);
-  if (waitForTail) await waitForWheelTail(page, lateTailDelayMs);
+  if (waitForTail) await waitForWheelTail(page, tailDurationMs);
+}
+
+async function sendTouchpadGesture(page, deltas, { intervalMs = 16 } = {}) {
+  await page.evaluate(({ sequence, interval }) => new Promise((resolve) => {
+    const target = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2) ?? window;
+    sequence.forEach((deltaY, index) => {
+      window.setTimeout(() => {
+        target.dispatchEvent(new WheelEvent("wheel", {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          deltaMode: WheelEvent.DOM_DELTA_PIXEL,
+          deltaY,
+        }));
+        if (index === sequence.length - 1) resolve();
+      }, index * interval);
+    });
+  }), { sequence: deltas, interval: intervalMs });
 }
 
 async function waitForFrame(page, storyId, frameIndex, timeout = 3_000) {
@@ -937,25 +955,29 @@ for (const browserName of requestedBrowsers) {
     }
     await refreshContext.close();
 
-    const lateTailContext = await browser.newContext({ viewport: report.viewport });
-    const lateTailPage = await lateTailContext.newPage();
-    await gotoHomepage(lateTailPage, targetUrl);
-    const lateTailGeometry = await homepageGeometry(lateTailPage);
-    const lateTailStory = lateTailGeometry.stories[0];
-    await setScroll(lateTailPage, lateTailStory.top + 1);
-    const lateTailSetup = await stepAndAudit(lateTailPage, lateTailStory.id, 0, 1);
-    await lateTailPage.evaluate(() => { window.__haloWheelAuditSamples = []; });
-    await sendWheelBurst(lateTailPage, 72, { lateTailDelayMs: 500 });
-    let lateTailWaitError = null;
+    const touchpadContext = await browser.newContext({ viewport: report.viewport });
+    const touchpadPage = await touchpadContext.newPage();
+    await gotoHomepage(touchpadPage, targetUrl);
+    const touchpadGeometry = await homepageGeometry(touchpadPage);
+    const touchpadStory = touchpadGeometry.stories[0];
+    const touchpadSequence = [12, 18, 24, 18, 12, 8];
+    await setScroll(touchpadPage, touchpadStory.top + 1);
+    const touchpadSetup = await stepAndAudit(touchpadPage, touchpadStory.id, 0, 1);
+
+    await touchpadPage.evaluate(() => { window.__haloWheelAuditSamples = []; });
+    await sendTouchpadGesture(touchpadPage, touchpadSequence);
+    await touchpadPage.waitForTimeout(250);
+    const queuedForwardStart = await readStoryState(touchpadPage, touchpadStory.id);
+    await sendTouchpadGesture(touchpadPage, touchpadSequence);
+    let queuedForwardWaitError = null;
     try {
-      await waitForFrame(lateTailPage, lateTailStory.id, 1, 3_000);
+      await waitForFrame(touchpadPage, touchpadStory.id, 2, 5_000);
     } catch (error) {
-      lateTailWaitError = String(error);
+      queuedForwardWaitError = String(error);
     }
-    await lateTailPage.waitForTimeout(700);
-    const lateTailSettled = await readStoryState(lateTailPage, lateTailStory.id);
-    const lateTailHold = await assertStableHold(lateTailPage, lateTailStory.id);
-    const lateTailGesture = await lateTailPage.evaluate(() => {
+    const queuedForwardHold = await assertStableHold(touchpadPage, touchpadStory.id);
+    const queuedForwardSettled = await readStoryState(touchpadPage, touchpadStory.id);
+    const queuedForwardGesture = await touchpadPage.evaluate(() => {
       const samples = window.__haloWheelAuditSamples ?? [];
       const gaps = samples.slice(1).map((sample, index) => sample.at - samples[index].at);
       return {
@@ -963,24 +985,411 @@ for (const browserName of requestedBrowsers) {
         maxGapMs: gaps.length ? Number(Math.max(...gaps).toFixed(2)) : 0,
       };
     });
-    browserResult.lateTailProtection = {
-      setup: lateTailSetup.settled,
-      settled: lateTailSettled,
-      hold: lateTailHold,
-      gesture: lateTailGesture,
-      waitError: lateTailWaitError,
+    browserResult.touchpadQueuedForward = {
+      setup: touchpadSetup.settled,
+      queuedAt: queuedForwardStart,
+      settled: queuedForwardSettled,
+      hold: queuedForwardHold,
+      gesture: queuedForwardGesture,
+      waitError: queuedForwardWaitError,
     };
-    if (lateTailSetup.waitError || lateTailSetup.settled.frameIndex !== 0
-      || lateTailWaitError || lateTailSettled.frameIndex !== 1
-      || lateTailSettled.frameId !== FRAME_IDS[lateTailStory.id][1]
-      || lateTailSettled.stopError > 2 || !lateTailHold.stable
-      || lateTailGesture.samples.length !== 7 || lateTailGesture.maxGapMs < 300) {
-      report.issues.push(issue("late-inertial-tail-escaped-gesture-lock", lateTailStory.id, {
+    if (touchpadSetup.waitError || touchpadSetup.settled.frameIndex !== 0
+      || queuedForwardStart.transitioning !== "true" || queuedForwardWaitError
+      || queuedForwardSettled.frameIndex !== 2
+      || queuedForwardSettled.frameId !== FRAME_IDS[touchpadStory.id][2]
+      || queuedForwardSettled.stopError > 2 || !queuedForwardHold.stable
+      || queuedForwardGesture.samples.length !== touchpadSequence.length * 2
+      || queuedForwardGesture.maxGapMs < 200) {
+      report.issues.push(issue("touchpad-second-gesture-not-queued-once", touchpadStory.id, {
         browser: browserName,
-        lateTailProtection: browserResult.lateTailProtection,
+        touchpadQueuedForward: browserResult.touchpadQueuedForward,
       }));
     }
-    await lateTailContext.close();
+
+    await jumpToFrame(touchpadPage, touchpadStory.id, 0);
+    await touchpadPage.evaluate(() => { window.__haloWheelAuditSamples = []; });
+    await sendTouchpadGesture(touchpadPage, touchpadSequence);
+    await touchpadPage.waitForTimeout(250);
+    const queuedReverseStart = await readStoryState(touchpadPage, touchpadStory.id);
+    await sendTouchpadGesture(touchpadPage, touchpadSequence.map((delta) => -delta));
+    let queuedReverseWaitError = null;
+    try {
+      await waitForFrame(touchpadPage, touchpadStory.id, 0, 5_000);
+    } catch (error) {
+      queuedReverseWaitError = String(error);
+    }
+    const queuedReverseHold = await assertStableHold(touchpadPage, touchpadStory.id);
+    const queuedReverseSettled = await readStoryState(touchpadPage, touchpadStory.id);
+    browserResult.touchpadQueuedReverse = {
+      queuedAt: queuedReverseStart,
+      settled: queuedReverseSettled,
+      hold: queuedReverseHold,
+      waitError: queuedReverseWaitError,
+    };
+    if (queuedReverseStart.transitioning !== "true" || queuedReverseWaitError
+      || queuedReverseSettled.frameIndex !== 0
+      || queuedReverseSettled.frameId !== FRAME_IDS[touchpadStory.id][0]
+      || queuedReverseSettled.stopError > 2 || !queuedReverseHold.stable) {
+      report.issues.push(issue("touchpad-queued-reverse-did-not-step-back", touchpadStory.id, {
+        browser: browserName,
+        touchpadQueuedReverse: browserResult.touchpadQueuedReverse,
+      }));
+    }
+
+    await jumpToFrame(touchpadPage, touchpadStory.id, 0);
+    const belowThresholdJumpClicked = await touchpadPage.evaluate((storyId) => {
+      const control = document.querySelector(
+        `[data-scroll-story="${storyId}"] [data-story-jump="postgresql"]`,
+      );
+      if (!(control instanceof HTMLElement)) return false;
+      control.click();
+      return true;
+    }, touchpadStory.id);
+    await touchpadPage.waitForFunction((storyId) => (
+      document.querySelector(`[data-scroll-story="${storyId}"]`)
+        ?.getAttribute("data-story-transitioning") === "true"
+    ), touchpadStory.id);
+    await sendTouchpadGesture(touchpadPage, [17, 18]);
+    await touchpadPage.waitForTimeout(250);
+    const belowThreshold = await readStoryState(touchpadPage, touchpadStory.id);
+    await sendTouchpadGesture(touchpadPage, [18]);
+    let belowThresholdWaitError = null;
+    try {
+      await waitForFrame(touchpadPage, touchpadStory.id, 2, 4_000);
+    } catch (error) {
+      belowThresholdWaitError = String(error);
+    }
+    const belowThresholdHold = await assertStableHold(touchpadPage, touchpadStory.id);
+    const belowThresholdSettled = await readStoryState(touchpadPage, touchpadStory.id);
+
+    await jumpToFrame(touchpadPage, touchpadStory.id, 0);
+    const atThresholdJumpClicked = await touchpadPage.evaluate((storyId) => {
+      const control = document.querySelector(
+        `[data-scroll-story="${storyId}"] [data-story-jump="postgresql"]`,
+      );
+      if (!(control instanceof HTMLElement)) return false;
+      control.click();
+      return true;
+    }, touchpadStory.id);
+    await touchpadPage.waitForFunction((storyId) => (
+      document.querySelector(`[data-scroll-story="${storyId}"]`)
+        ?.getAttribute("data-story-transitioning") === "true"
+    ), touchpadStory.id);
+    await sendTouchpadGesture(touchpadPage, [18, 18]);
+    let atThresholdWaitError = null;
+    try {
+      await waitForFrame(touchpadPage, touchpadStory.id, 3, 5_000);
+    } catch (error) {
+      atThresholdWaitError = String(error);
+    }
+    const atThresholdHold = await assertStableHold(touchpadPage, touchpadStory.id);
+    const atThresholdSettled = await readStoryState(touchpadPage, touchpadStory.id);
+    browserResult.touchpadThreshold = {
+      belowThresholdJumpClicked,
+      belowThreshold,
+      belowThresholdSettled,
+      belowThresholdHold,
+      belowThresholdWaitError,
+      atThresholdJumpClicked,
+      atThresholdSettled,
+      atThresholdHold,
+      atThresholdWaitError,
+    };
+    if (!belowThresholdJumpClicked || belowThreshold.transitioning !== "true"
+      || belowThresholdWaitError || belowThresholdSettled.frameIndex !== 2
+      || !belowThresholdHold.stable
+      || !atThresholdJumpClicked || atThresholdWaitError
+      || atThresholdSettled.frameIndex !== 3
+      || atThresholdSettled.frameId !== FRAME_IDS[touchpadStory.id][3]
+      || !atThresholdHold.stable) {
+      report.issues.push(issue("touchpad-threshold-boundary-failed", touchpadStory.id, {
+        browser: browserName,
+        touchpadThreshold: browserResult.touchpadThreshold,
+      }));
+    }
+
+    await jumpToFrame(touchpadPage, touchpadStory.id, 0);
+    await touchpadPage.evaluate((storyId) => {
+      window.__haloWheelAuditSamples = [];
+      window.__haloImmediateTransitionSettledAt = null;
+      window.__haloImmediateTransitionObserver?.disconnect();
+      const story = document.querySelector(`[data-scroll-story="${storyId}"]`);
+      let sawTransition = false;
+      const observer = new MutationObserver(() => {
+        if (story?.getAttribute("data-story-transitioning") === "true") {
+          sawTransition = true;
+          return;
+        }
+        if (sawTransition) {
+          window.__haloImmediateTransitionSettledAt = Number(performance.now().toFixed(2));
+          observer.disconnect();
+        }
+      });
+      if (story) observer.observe(story, { attributes: true, attributeFilter: ["data-story-transitioning"] });
+      window.__haloImmediateTransitionObserver = observer;
+    }, touchpadStory.id);
+    await sendTouchpadGesture(touchpadPage, touchpadSequence);
+    await waitForFrame(touchpadPage, touchpadStory.id, 1, 4_000);
+    await sendTouchpadGesture(touchpadPage, touchpadSequence);
+    let immediateReleaseWaitError = null;
+    try {
+      await waitForFrame(touchpadPage, touchpadStory.id, 2, 4_000);
+    } catch (error) {
+      immediateReleaseWaitError = String(error);
+    }
+    const immediateReleaseHold = await assertStableHold(touchpadPage, touchpadStory.id);
+    const immediateReleaseSettled = await readStoryState(touchpadPage, touchpadStory.id);
+    const immediateReleaseTiming = await touchpadPage.evaluate((secondGestureSampleIndex) => {
+      const samples = window.__haloWheelAuditSamples ?? [];
+      const transitionSettledAt = window.__haloImmediateTransitionSettledAt;
+      const secondGestureAt = samples[secondGestureSampleIndex]?.at ?? null;
+      return {
+        samples,
+        transitionSettledAt,
+        secondGestureAt,
+        gapMs: Number.isFinite(transitionSettledAt) && Number.isFinite(secondGestureAt)
+          ? Number((secondGestureAt - transitionSettledAt).toFixed(2))
+          : null,
+      };
+    }, touchpadSequence.length);
+    browserResult.touchpadImmediatePostTransition = {
+      settled: immediateReleaseSettled,
+      hold: immediateReleaseHold,
+      timing: immediateReleaseTiming,
+      waitError: immediateReleaseWaitError,
+    };
+    if (immediateReleaseWaitError || immediateReleaseSettled.frameIndex !== 2
+      || immediateReleaseSettled.frameId !== FRAME_IDS[touchpadStory.id][2]
+      || !immediateReleaseHold.stable || immediateReleaseTiming.gapMs === null
+      || immediateReleaseTiming.gapMs < 0 || immediateReleaseTiming.gapMs >= 200) {
+      report.issues.push(issue("post-transition-wheel-lock-was-rearmed", touchpadStory.id, {
+        browser: browserName,
+        touchpadImmediatePostTransition: browserResult.touchpadImmediatePostTransition,
+      }));
+    }
+
+    const queueResetSequence = [12, 18, 24];
+    const prepareQueuedStep = async () => {
+      await sendTouchpadGesture(touchpadPage, queueResetSequence);
+      await touchpadPage.waitForTimeout(250);
+      const beforeQueue = await readStoryState(touchpadPage, touchpadStory.id);
+      await sendTouchpadGesture(touchpadPage, queueResetSequence);
+      const afterQueue = await readStoryState(touchpadPage, touchpadStory.id);
+      return { beforeQueue, afterQueue };
+    };
+
+    await jumpToFrame(touchpadPage, touchpadStory.id, 0);
+    const replayQueue = await prepareQueuedStep();
+    await touchpadPage.evaluate((storyId) => {
+      document.querySelector(`[data-scroll-story="${storyId}"] [data-story-replay]`)?.click();
+    }, touchpadStory.id);
+    let replayQueueWaitError = null;
+    try {
+      await waitForFrame(touchpadPage, touchpadStory.id, 0, 4_000);
+    } catch (error) {
+      replayQueueWaitError = String(error);
+    }
+    const replayQueueHold = await assertStableHold(touchpadPage, touchpadStory.id);
+    const replayQueueSettled = await readStoryState(touchpadPage, touchpadStory.id);
+    browserResult.replayClearsQueuedStep = {
+      ...replayQueue,
+      settled: replayQueueSettled,
+      hold: replayQueueHold,
+      waitError: replayQueueWaitError,
+    };
+    if (replayQueue.afterQueue.transitioning !== "true" || replayQueueWaitError
+      || replayQueueSettled.frameIndex !== 0 || !replayQueueHold.stable) {
+      report.issues.push(issue("replay-did-not-clear-queued-step", touchpadStory.id, {
+        browser: browserName,
+        replayClearsQueuedStep: browserResult.replayClearsQueuedStep,
+      }));
+    }
+
+    await jumpToFrame(touchpadPage, touchpadStory.id, 0);
+    const jumpQueue = await prepareQueuedStep();
+    const jumpClicked = await touchpadPage.evaluate((storyId) => {
+      const control = document.querySelector(
+        `[data-scroll-story="${storyId}"] [data-story-jump="mysql"]`,
+      );
+      if (!(control instanceof HTMLElement)) return false;
+      control.click();
+      return true;
+    }, touchpadStory.id);
+    let jumpQueueWaitError = null;
+    try {
+      await waitForFrame(touchpadPage, touchpadStory.id, 1, 4_000);
+    } catch (error) {
+      jumpQueueWaitError = String(error);
+    }
+    const jumpQueueHold = await assertStableHold(touchpadPage, touchpadStory.id);
+    const jumpQueueSettled = await readStoryState(touchpadPage, touchpadStory.id);
+    browserResult.jumpClearsQueuedStep = {
+      ...jumpQueue,
+      clicked: jumpClicked,
+      settled: jumpQueueSettled,
+      hold: jumpQueueHold,
+      waitError: jumpQueueWaitError,
+    };
+    if (jumpQueue.afterQueue.transitioning !== "true" || !jumpClicked || jumpQueueWaitError
+      || jumpQueueSettled.frameIndex !== 1 || !jumpQueueHold.stable) {
+      report.issues.push(issue("chapter-jump-did-not-clear-queued-step", touchpadStory.id, {
+        browser: browserName,
+        jumpClearsQueuedStep: browserResult.jumpClearsQueuedStep,
+      }));
+    }
+
+    await jumpToFrame(touchpadPage, touchpadStory.id, 0);
+    const resizeQueue = await prepareQueuedStep();
+    await touchpadPage.evaluate((storyId) => {
+      window.__haloQueuedResizeTriggered = false;
+      window.__haloQueuedResizeObserver?.disconnect();
+      const story = document.querySelector(`[data-scroll-story="${storyId}"]`);
+      let sawTransition = story?.getAttribute("data-story-transitioning") === "true";
+      const observer = new MutationObserver(() => {
+        if (story?.getAttribute("data-story-transitioning") === "true") {
+          sawTransition = true;
+          return;
+        }
+        if (sawTransition) {
+          window.__haloQueuedResizeTriggered = true;
+          window.visualViewport?.dispatchEvent(new Event("resize"));
+          observer.disconnect();
+        }
+      });
+      if (story) observer.observe(story, { attributes: true, attributeFilter: ["data-story-transitioning"] });
+      window.__haloQueuedResizeObserver = observer;
+    }, touchpadStory.id);
+    let resizeQueueWaitError = null;
+    try {
+      await waitForFrame(touchpadPage, touchpadStory.id, 1, 5_000);
+    } catch (error) {
+      resizeQueueWaitError = String(error);
+    }
+    const resizeQueueHold = await assertStableHold(touchpadPage, touchpadStory.id);
+    const resizeQueueSettled = await readStoryState(touchpadPage, touchpadStory.id);
+    const resizeTriggered = await touchpadPage.evaluate(() => window.__haloQueuedResizeTriggered === true);
+    browserResult.resizeClearsQueuedStep = {
+      ...resizeQueue,
+      resizeTriggered,
+      settled: resizeQueueSettled,
+      hold: resizeQueueHold,
+      waitError: resizeQueueWaitError,
+    };
+    if (resizeQueue.afterQueue.transitioning !== "true" || !resizeTriggered || resizeQueueWaitError
+      || resizeQueueSettled.frameIndex !== 1 || !resizeQueueHold.stable) {
+      report.issues.push(issue("resize-did-not-clear-queued-step", touchpadStory.id, {
+        browser: browserName,
+        resizeClearsQueuedStep: browserResult.resizeClearsQueuedStep,
+      }));
+    }
+
+    await jumpToFrame(touchpadPage, touchpadStory.id, 0);
+    const cleanupQueue = await prepareQueuedStep();
+    await touchpadPage.setViewportSize({ width: 1000, height: 800 });
+    await touchpadPage.waitForFunction(() => !document.documentElement.classList.contains("story-scroll-ready"));
+    await touchpadPage.waitForTimeout(250);
+    const cleanupFirstY = await touchpadPage.evaluate(() => window.scrollY);
+    await touchpadPage.waitForTimeout(600);
+    const cleanupFinal = await touchpadPage.evaluate(() => ({
+      y: window.scrollY,
+      storyScrollReady: document.documentElement.classList.contains("story-scroll-ready"),
+      transitioning: document.querySelector('[data-scroll-story="compatibility"]')
+        ?.getAttribute("data-story-transitioning") ?? null,
+    }));
+    browserResult.cleanupClearsQueuedStep = {
+      ...cleanupQueue,
+      firstY: cleanupFirstY,
+      final: cleanupFinal,
+    };
+    if (cleanupQueue.afterQueue.transitioning !== "true" || cleanupFinal.storyScrollReady
+      || cleanupFinal.transitioning === "true" || Math.abs(cleanupFinal.y - cleanupFirstY) > 2) {
+      report.issues.push(issue("component-cleanup-did-not-cancel-queued-step", touchpadStory.id, {
+        browser: browserName,
+        cleanupClearsQueuedStep: browserResult.cleanupClearsQueuedStep,
+      }));
+    }
+    await touchpadContext.close();
+
+    const continuousTailContext = await browser.newContext({ viewport: report.viewport });
+    const continuousTailPage = await continuousTailContext.newPage();
+    await gotoHomepage(continuousTailPage, targetUrl);
+    const continuousTailGeometry = await homepageGeometry(continuousTailPage);
+    const continuousTailStory = continuousTailGeometry.stories[0];
+    await setScroll(continuousTailPage, continuousTailStory.top + 1);
+    const continuousTailSetup = await stepAndAudit(continuousTailPage, continuousTailStory.id, 0, 1);
+    await continuousTailPage.evaluate((storyId) => {
+      window.__haloWheelAuditSamples = [];
+      window.__haloContinuousTailTransitionSettledAt = null;
+      window.__haloContinuousTailObserver?.disconnect();
+      const story = document.querySelector(`[data-scroll-story="${storyId}"]`);
+      let sawTransition = false;
+      const observer = new MutationObserver(() => {
+        if (story?.getAttribute("data-story-transitioning") === "true") {
+          sawTransition = true;
+          return;
+        }
+        if (sawTransition) {
+          window.__haloContinuousTailTransitionSettledAt = Number(performance.now().toFixed(2));
+          observer.disconnect();
+        }
+      });
+      if (story) observer.observe(story, { attributes: true, attributeFilter: ["data-story-transitioning"] });
+      window.__haloContinuousTailObserver = observer;
+    }, continuousTailStory.id);
+    const continuousTailSchedule = [
+      { delay: 20, deltaY: 48 },
+      { delay: 60, deltaY: 36 },
+      { delay: 120, deltaY: 28 },
+      { delay: 200, deltaY: 21 },
+      { delay: 300, deltaY: 16 },
+      { delay: 420, deltaY: 12 },
+      { delay: 540, deltaY: 8 },
+      { delay: 660, deltaY: 4 },
+    ];
+    await sendWheelBurst(continuousTailPage, 72, { tailSchedule: continuousTailSchedule });
+    let continuousTailWaitError = null;
+    try {
+      await waitForFrame(continuousTailPage, continuousTailStory.id, 1, 3_000);
+    } catch (error) {
+      continuousTailWaitError = String(error);
+    }
+    await continuousTailPage.waitForTimeout(300);
+    const continuousTailSettled = await readStoryState(continuousTailPage, continuousTailStory.id);
+    const continuousTailHold = await assertStableHold(continuousTailPage, continuousTailStory.id);
+    const continuousTailGesture = await continuousTailPage.evaluate(() => {
+      const samples = window.__haloWheelAuditSamples ?? [];
+      const gaps = samples.slice(1).map((sample, index) => sample.at - samples[index].at);
+      const magnitudes = samples.map((sample) => Math.abs(sample.deltaY));
+      const transitionSettledAt = window.__haloContinuousTailTransitionSettledAt;
+      return {
+        samples,
+        maxGapMs: gaps.length ? Number(Math.max(...gaps).toFixed(2)) : 0,
+        decays: magnitudes.every((value, index) => index === 0 || value <= magnitudes[index - 1]),
+        transitionSettledAt,
+        tailAfterTransition: Number.isFinite(transitionSettledAt)
+          && samples.some((sample) => sample.at > transitionSettledAt),
+      };
+    });
+    browserResult.continuousTailProtection = {
+      setup: continuousTailSetup.settled,
+      settled: continuousTailSettled,
+      hold: continuousTailHold,
+      gesture: continuousTailGesture,
+      waitError: continuousTailWaitError,
+    };
+    if (continuousTailSetup.waitError || continuousTailSetup.settled.frameIndex !== 0
+      || continuousTailWaitError || continuousTailSettled.frameIndex !== 1
+      || continuousTailSettled.frameId !== FRAME_IDS[continuousTailStory.id][1]
+      || continuousTailSettled.stopError > 2 || !continuousTailHold.stable
+      || continuousTailGesture.samples.length !== continuousTailSchedule.length + 1
+      || continuousTailGesture.maxGapMs >= 200 || !continuousTailGesture.decays
+      || !continuousTailGesture.tailAfterTransition) {
+      report.issues.push(issue("continuous-inertial-tail-skipped-frame", continuousTailStory.id, {
+        browser: browserName,
+        continuousTailProtection: browserResult.continuousTailProtection,
+      }));
+    }
+    await continuousTailContext.close();
 
     const resizeContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
     const resizePage = await resizeContext.newPage();

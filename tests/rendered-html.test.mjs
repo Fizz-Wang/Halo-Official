@@ -789,6 +789,10 @@ test("ships five independent scroll stories as accessible progressive enhancemen
   assert.match(homeStoryMotion, /window\.addEventListener\("wheel", onWheel, \{ passive: false, capture: true \}\)/);
   assert.match(homeStoryMotion, /gestureCommitted \|\| transitionActive/);
   assert.match(homeStoryMotion, /WHEEL_GESTURE_QUIET_MS/);
+  assert.match(homeStoryMotion, /queuedGestureActive/);
+  assert.match(homeStoryMotion, /queuedStepDirection/);
+  assert.match(homeStoryMotion, /Math\.abs\(queuedWheelAccumulator\) < WHEEL_STEP_THRESHOLD/);
+  assert.doesNotMatch(homeStoryMotion, /if \(gestureCommitted\) scheduleGestureQuiet\(\)/);
   assert.match(homeStoryMotion, /event\.ctrlKey \|\| event\.metaKey/);
   assert.match(homeStoryMotion, /data-story-stop-y|storyStopY/);
   assert.doesNotMatch(homeStoryMotion, /behavior:\s*"smooth"/);

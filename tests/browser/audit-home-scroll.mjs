@@ -161,6 +161,7 @@ async function auditVisibleLayout(page, rootSelector = null) {
       if (
         !text
         || element.closest('[aria-hidden="true"]')
+        || element.closest(".sr-only")
         || (closedDetails && !element.matches("summary") && !element.closest("summary"))
       ) continue;
       const style = getComputedStyle(element);

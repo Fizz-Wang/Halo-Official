@@ -65,7 +65,7 @@ export const headerItems: readonly HeaderItem[] = [
   {
     kind: "link",
     id: "contact-sales",
-    label: "Commercial Planning",
+    label: "Product Access",
     href: "/contact-sales/",
     presentation: "utility",
   },
@@ -136,8 +136,9 @@ export const footerGroups: readonly FooterGroup[] = [
     id: "company",
     label: "Company",
     links: [
-      { label: "Company", href: "/company/" },
-      { label: "Commercial Planning", href: "/contact-sales/" },
+      { label: "About Halo Tech", href: "/company/" },
+      { label: "Product Access & Licensing", href: "/contact-sales/" },
+      { label: "openHalo (Open Source)", href: "https://www.openhalo.org/" },
     ],
   },
 ] as const;

@@ -28,9 +28,9 @@ const activeRoutes = [
   ["/resources/documentation/", "Halo 1.0.16 Product Documentation Basis", "Product knowledge, reorganized for enterprise evaluation.", "index, follow", "See how the Halo 1.0.16 manual is reorganized into enterprise product, migration, architecture, and operations content."],
   ["/resources/evidence/", "Evidence & Validation | Halo Database", "See what each Halo claim establishes—and what it does not.", "index, follow", "See what material Halo statements establish, their manual source, their limits, and what a workload evaluation must validate."],
   ["/resources/evaluation-checklist/", "Halo Database Evaluation Checklist", "Bring the application, architecture, and decision criteria.", "index, follow", "Prepare the application, compatibility surface, data, workload, target architecture, operations, and acceptance record for a Halo PoC."],
-  ["/company/", "About Halo Database", "Built from a migration problem. Evolved into a unified database.", "index, follow", "Learn how an Oracle migration problem led to Halo’s multimode, openHalo-based database platform."],
-  ["/request-poc/", "Prepare a Halo Database PoC", "Define what Halo needs to prove.", "noindex, follow", "Prepare a workload-specific Halo proof-of-concept plan."],
-  ["/contact-sales/", "Halo Database Commercial Planning", "Prepare commercial, procurement, and regional-fit questions.", "noindex, follow", "Prepare commercial, procurement, deployment-scope, or regional-fit questions for Halo Database."],
+  ["/company/", "About Halo Tech | Halo Database", "Database engineering, from kernel to enterprise rollout.", "index, follow", "Meet the engineering team behind commercial Halo Database and the open-source openHalo project, and understand how to start an enterprise evaluation."],
+  ["/request-poc/", "Plan a Halo Database PoC", "Plan the workload. Halo Tech coordinates product access.", "noindex, follow", "Coordinate a Halo Database installation package, environment-specific license, and workload-focused proof of concept with Halo Tech."],
+  ["/contact-sales/", "Halo Database Product Access & Licensing", "Discuss product access, licensing, and commercial fit.", "noindex, follow", "Contact Halo Tech about Halo Database installation packages, licenses, PoC access, procurement, and regional availability."],
   ["/request-demo/", "Prepare a Halo Database Demo Brief", "Choose the Halo capabilities you want to explore.", "noindex, follow", "Choose the Halo capabilities to organize for a future product introduction."],
 ];
 
@@ -385,6 +385,26 @@ test("renders P07 as a five-step decision method with one comparison", async () 
   assert.match(html, /<h3[^>]*aria-label=["']1\. Frame the decision["'][^>]*>\s*<span[^>]*>Frame the decision<\/span>\s*<\/h3>/i);
 });
 
+test("distinguishes commercial Halo Database access from openHalo", async () => {
+  const company = await (await render("/company/")).text();
+  const poc = await (await render("/request-poc/")).text();
+  const sales = await (await render("/contact-sales/")).text();
+  const documentation = await (await render("/resources/documentation/")).text();
+
+  assert.match(company, /Halo Database and openHalo serve different paths/i);
+  assert.match(company, /Commercial, licensed enterprise database software[\s\S]*?GPL-3\.0 open-source database project/i);
+  assert.match(company, /https:\/\/github\.com\/HaloTech-Co-Ltd\/openHalo/i);
+  assert.match(company, /support@halodbtech\.com/i);
+
+  assert.match(poc, /The installation package and license come from Halo Tech/i);
+  assert.match(poc, /license is generated for server-environment information/i);
+  assert.match(poc, /href=["']mailto:support@halodbtech\.com/i);
+
+  assert.match(sales, /Halo Database and openHalo have different access models/i);
+  assert.match(sales, /installation packages and license files are provided through company coordination/i);
+  assert.match(documentation, /Public documentation is not a public Halo Database download/i);
+});
+
 test("keeps the P05 recovery scenario record ordered", async () => {
   const html = await (await render("/product/availability-recovery/")).text();
   assert.match(
@@ -477,7 +497,7 @@ test("keeps the controlled primary shell order and one native no-JavaScript tree
     "Evidence &amp; Validation",
     "Evaluation Checklist",
     "Company",
-    "Commercial Planning",
+    "Product Access",
     "Prepare a PoC",
   ];
   let cursor = -1;
@@ -723,7 +743,7 @@ test("ships five independent scroll stories as accessible progressive enhancemen
   assert.match(home, /2012[\s\S]*?≥95%[\s\S]*?45/i);
   assert.doesNotMatch(home, /second LTS/i);
   assert.match(home, /Reported from Oracle migration practice; workload-specific, not universal and not a forecast\./i);
-  assert.match(home, /Start with the proof you need\.[\s\S]*?Build your PoC scope[\s\S]*?Evaluate an Oracle workload[\s\S]*?Prepare a demo brief[\s\S]*?Review commercial planning/i);
+  assert.match(home, /Start with the proof you need\.[\s\S]*?Build your PoC scope[\s\S]*?Evaluate an Oracle workload[\s\S]*?Prepare a demo brief[\s\S]*?Ask about product access/i);
   assert.doesNotMatch(home, /Technology explorer|Set the workload boundary|Record fit and decide|SQL firewall/i);
   assert.equal(count(home, /class=["']experience-progress["']/gi), 1);
   assert.equal(count(home, /class=["']experience-cursor["']/gi), 1);

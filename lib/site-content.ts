@@ -9,9 +9,10 @@ import { manualJourneyPages } from "./manual-journey-pages";
  * route intentionally has no hero, SEO metadata, or content blocks. Conditional
  * modules are listed only as non-renderable gate records and carry no preview
  * copy, so a missing activation decision cannot leak into public output.
- * Stage 5 R6 makes the whole Partner lane atomic; there is no public
- * non-converting P13 variant. On P15–P17, the Safety note, submission boundary,
- * and submit label stay with the absent form shell until A06 ∧ A12.
+ * P13 is a public, information-only ecosystem page. The separate P18 partner
+ * application and its acquisition flow remain atomic and unavailable until
+ * A08 ∧ A06 ∧ A12. On P15–P17, the Safety note, submission boundary, and
+ * submit label stay with the absent form shell until A06 ∧ A12.
  */
 
 export const gateIds = [
@@ -59,7 +60,8 @@ export type PageId =
   | "P23"
   | "P24"
   | "P25"
-  | "P26";
+  | "P26"
+  | "P27";
 
 export type ActiveRoutePath =
   | "/"
@@ -78,6 +80,8 @@ export type ActiveRoutePath =
   | "/resources/evidence/"
   | "/resources/evaluation-checklist/"
   | "/company/"
+  | "/contact-us/"
+  | "/partners/"
   | "/open-halo/"
   | "/request-poc/"
   | "/contact-sales/"
@@ -86,7 +90,6 @@ export type ActiveRoutePath =
 
 export type InactiveRoutePath =
   | "/case-studies/"
-  | "/partners/"
   | "/partners/apply/"
   | "/privacy/"
   | "/accessibility/";
@@ -2363,18 +2366,6 @@ const legacySitePages = [
     canonicalPath: null,
     seo: null,
     activation: { requires: ["A01"], atomic: true },
-  },
-  {
-    id: "P13",
-    status: "inactive",
-    name: "Partners",
-    path: "/partners/",
-    canonicalPath: null,
-    seo: null,
-    activation: {
-      requires: ["A08", "A06", "A12"],
-      atomic: true,
-    },
   },
   {
     id: "P14",

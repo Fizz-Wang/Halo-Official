@@ -57,14 +57,21 @@ export const headerItems: readonly HeaderItem[] = [
     ],
   },
   {
+    kind: "link",
+    id: "open-source",
+    label: "Open Source",
+    href: "/open-halo/",
+  },
+  {
     kind: "group",
-    id: "company",
-    label: "Company",
+    id: "about-us",
+    label: "About Us",
     href: "/company/",
-    disclosureLabel: "Company links",
+    disclosureLabel: "About Us links",
     links: [
-      { label: "About Halo Tech", href: "/company/" },
-      { label: "openHalo", href: "/open-halo/" },
+      { label: "About Us", href: "/company/" },
+      { label: "Contact Us", href: "/contact-us/" },
+      { label: "Partners", href: "/partners/" },
     ],
   },
   {
@@ -138,12 +145,24 @@ export const footerGroups: readonly FooterGroup[] = [
     ],
   },
   {
-    id: "company",
-    label: "Company",
+    id: "about-us",
+    label: "About Us",
     links: [
-      { label: "About Halo Tech", href: "/company/" },
-      { label: "Product Access & Licensing", href: "/contact-sales/" },
-      { label: "openHalo (Open Source)", href: "/open-halo/" },
+      { label: "About Us", href: "/company/" },
+      { label: "Contact Us", href: "/contact-us/" },
+      { label: "Partners", href: "/partners/" },
+    ],
+  },
+  {
+    id: "open-source",
+    label: "Open Source",
+    links: [
+      { label: "openHalo", href: "/open-halo/" },
+      {
+        label: "View on GitHub",
+        href: "https://github.com/HaloTech-Co-Ltd/openHalo",
+      },
+      { label: "Visit openHalo.org", href: "https://www.openhalo.org/" },
     ],
   },
 ] as const;

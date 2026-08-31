@@ -23,11 +23,11 @@ npm run verify
 ## Current release boundary
 
 - Active content routes are rendered from `lib/site-content.ts`.
-- Case Studies, Partners, Privacy, and Accessibility remain inactive and return the approved 404 shell.
-- Prepare a PoC, Commercial Planning, and Plan a Demo are approved no-form preparation shells. Forms, submission states, backend routing, and analytics remain inactive until A06/A12; the Partner lane also requires A08.
+- Case Studies, the Partner Application, Privacy, and Accessibility remain inactive and return the approved 404 shell. The public Partners route is information-only.
+- Prepare a PoC, Commercial Planning, and Plan a Demo are approved no-form preparation shells. Forms, submission states, backend routing, and analytics remain inactive until A06/A12; the Partner Application also requires A08.
 - Preview and unapproved hosts are `noindex`, publish a crawl-blocking robots policy, and return an empty sitemap. Absolute canonical/OG URL, the production sitemap, and minimal WebSite schema require `SITE_RELEASE_MODE=production`, `SITE_RELEASE_APPROVED=true`, and an exact validated `SITE_CANONICAL_ORIGIN` that matches the request origin. These non-secret runtime values must not be guessed or committed as placeholders.
 - Analytics is a deliberately no-op closed schema; no tracker, cookie, identifier, or event request is present.
-- The legal entity/contact identity, customer proof, support matrix, exact HA topology, and other gated claims are deliberately absent until their recorded approvals pass.
+- The legal entity, physical address, customer proof, support matrix, exact HA topology, and other gated claims are deliberately absent until their recorded approvals pass. Public contact is limited to the approved company email.
 - The Stage 7 release intentionally uses the design system's declared system-font fallbacks. No unapproved font binary is bundled; approved licensed Inter Variable and IBM Plex Mono WOFF2 assets can replace the fallback branch in a focused asset review.
 
 ## Structure

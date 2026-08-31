@@ -28,7 +28,9 @@ const activeRoutes = [
   ["/resources/documentation/", "Halo 1.0.16 Product Documentation Basis", "Product knowledge, reorganized for enterprise evaluation.", "index, follow", "See how the Halo 1.0.16 manual is reorganized into enterprise product, migration, architecture, and operations content."],
   ["/resources/evidence/", "Evidence & Validation | Halo Database", "See what each Halo claim establishes—and what it does not.", "index, follow", "See what material Halo statements establish, their manual source, their limits, and what a workload evaluation must validate."],
   ["/resources/evaluation-checklist/", "Halo Database Evaluation Checklist", "Bring the application, architecture, and decision criteria.", "index, follow", "Prepare the application, compatibility surface, data, workload, target architecture, operations, and acceptance record for a Halo PoC."],
-  ["/company/", "About Halo Tech | Halo Database", "Database engineering, from kernel to enterprise rollout.", "index, follow", "Meet Halo Tech, its engineering-led database team, full-lifecycle capabilities, company history, qualifications, and commercial and open-source paths."],
+  ["/company/", "About Halo Tech | Halo Database", "Database engineering, from kernel to enterprise rollout.", "index, follow", "Meet Halo Tech, its engineering-led database team, full-lifecycle capabilities, company history, innovation record, and qualifications."],
+  ["/contact-us/", "Contact Halo Tech | Halo Database", "Start with the question you have.", "index, follow", "Contact Halo Tech by email about the company, Halo Database product access, a proof of concept, product questions, or ecosystem compatibility."],
+  ["/partners/", "Partners & Compatibility Ecosystem | Halo Tech", "Compatibility first, collaboration by discussion.", "index, follow", "Explore Halo Tech’s published compatibility ecosystem and the paths for product verification, technical integration, and private partnership discussions."],
   ["/open-halo/", "openHalo Open-Source Database Project | Halo Tech", "openHalo: open-source MySQL compatibility for PostgreSQL.", "index, follow", "Explore openHalo, a GPL-3.0 PostgreSQL project for commonly used MySQL dialects and protocol, designed to support migrations with fewer code changes."],
   ["/request-poc/", "Plan a Halo Database PoC", "Plan the workload. Halo Tech coordinates product access.", "noindex, follow", "Coordinate a Halo Database installation package, environment-specific license, and workload-focused proof of concept with Halo Tech."],
   ["/contact-sales/", "Halo Database Product Access & Licensing", "Discuss product access, licensing, and commercial fit.", "noindex, follow", "Contact Halo Tech about Halo Database installation packages, licenses, PoC access, procurement, and regional availability."],
@@ -111,7 +113,7 @@ test("normalizes every non-root canonical route to its approved trailing slash",
 });
 
 test("does not redirect unmatched or gated slashless URLs before the exact 404", async () => {
-  for (const path of ["/privacy", "/partners", "/case-studies/example", "/does-not-exist"]) {
+  for (const path of ["/privacy", "/partners/apply", "/case-studies/example", "/does-not-exist"]) {
     const response = await render(path);
     assert.equal(response.status, 404, path);
     assert.equal(response.headers.get("location"), null, path);
@@ -122,7 +124,7 @@ test("does not redirect unmatched or gated slashless URLs before the exact 404",
 });
 
 test("keeps unmatched and gated routes at a direct 404 for GET/HEAD content negotiation", async () => {
-  for (const path of ["/privacy", "/partners", "/does-not-exist"]) {
+  for (const path of ["/privacy", "/partners/apply", "/does-not-exist"]) {
     for (const accept of ["text/html", "*/*", "application/json", ""]) {
       for (const method of ["GET", "HEAD"]) {
         const headers = accept ? { accept } : {};
@@ -338,10 +340,12 @@ test("activates production discovery only for the exact approved request origin"
   const sitemap = await releaseFetch("/sitemap.xml");
   const sitemapXml = await sitemap.text();
   const locations = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
-  assert.equal(locations.length, 16);
-  assert.equal(new Set(locations).size, 16);
+  assert.equal(locations.length, 18);
+  assert.equal(new Set(locations).size, 18);
   assert.ok(locations.every((url) => url.startsWith("https://halo.example.com/")));
   assert.ok(locations.every((url) => url.endsWith("/")));
+  assert.ok(locations.includes("https://halo.example.com/contact-us/"));
+  assert.ok(locations.includes("https://halo.example.com/partners/"));
   assert.ok(locations.includes("https://halo.example.com/open-halo/"));
   for (const forbidden of [
     "/request-poc/",
@@ -349,7 +353,7 @@ test("activates production discovery only for the exact approved request origin"
     "/request-demo/",
     "/404/",
     "/case-studies/",
-    "/partners/",
+    "/partners/apply/",
     "/privacy/",
     "/accessibility/",
   ]) {
@@ -395,12 +399,14 @@ test("distinguishes commercial Halo Database access from openHalo", async () => 
   const documentation = await (await render("/resources/documentation/")).text();
   const evaluation = await (await render("/evaluation/")).text();
   const boundary = /Halo Database is commercial, licensed software\.[\s\S]*?Installation packages and evaluation licenses are coordinated with Halo Tech\.[\s\S]*?openHalo is a separate GPL-3\.0 open-source project\./i;
+  const companyMain = company.match(/<main\b[^>]*>(.*?)<\/main>/is)?.[1] ?? "";
 
-  assert.match(company, /Halo Database and openHalo serve different paths/i);
-  assert.match(company, /Commercial, licensed enterprise database software[\s\S]*?GPL-3\.0 open-source database project/i);
-  assert.match(company, /href=["']\/open-halo\/["']/i);
-  assert.match(company, /support@halodbtech\.com/i);
-  assert.match(company, boundary);
+  assert.match(companyMain, /One team across the database lifecycle/i);
+  assert.match(companyMain, /21\+[\s\S]*?mutual-certification relationships/i);
+  assert.match(companyMain, /2025[\s\S]*?Open-Source Contribution/i);
+  assert.doesNotMatch(companyMain, /Halo Database and openHalo serve different paths|PRODUCT BOUNDARY/i);
+  assert.doesNotMatch(companyMain, /support@halodbtech\.com|Explore openHalo/i);
+  assert.doesNotMatch(companyMain, boundary);
 
   assert.match(openHalo, /commonly used[\s\S]*?MySQL[\s\S]*?fewer code changes/i);
   assert.match(openHalo, boundary);
@@ -434,6 +440,27 @@ test("keeps every company contact email-only and removes telephone entry points"
   }
 });
 
+test("keeps Contact Us and Partners as separate email-only information pages", async () => {
+  const contact = await (await render("/contact-us/")).text();
+  const contactMain = contact.match(/<main\b[^>]*>(.*?)<\/main>/is)?.[1] ?? "";
+  assert.match(contactMain, /support@halodbtech\.com/i);
+  assert.match(contactMain, /href=["']\/contact-sales\/["']/i);
+  assert.match(contactMain, /href=["']\/request-poc\/\?source=contact-us["']/i);
+  assert.match(contactMain, /href=["']\/partners\/["']/i);
+  assert.match(contactMain, /An email starts a conversation; it does not confirm scope or availability/i);
+  assert.doesNotMatch(contactMain, /<form\b|\btel:|0571-87168929|Room 2601|Binjiang District/i);
+
+  const partners = await (await render("/partners/")).text();
+  const partnersMain = partners.match(/<main\b[^>]*>(.*?)<\/main>/is)?.[1] ?? "";
+  assert.match(partnersMain, /Compatibility activity is not the same as a commercial partnership/i);
+  assert.match(partnersMain, /Published ecosystem roster/i);
+  assert.match(partnersMain, /support@halodbtech\.com/i);
+  assert.doesNotMatch(partnersMain, /href=["']\/partners\/apply\/["']|<form\b/i);
+
+  const application = await render("/partners/apply/");
+  assert.equal(application.status, 404);
+});
+
 test("uses one label for every internal PoC entry point", async () => {
   for (const [path] of activeRoutes) {
     const html = await (await render(path)).text();
@@ -445,14 +472,15 @@ test("uses one label for every internal PoC entry point", async () => {
 
 test("renders self-hosted gallery media with explicit accessible dimensions", async () => {
   const pages = [
-    ["/company/", 6],
-    ["/open-halo/", 6],
+    ["/company/", 6, 2],
+    ["/open-halo/", 6, 2],
+    ["/partners/", 35, 1],
   ];
 
-  for (const [path, expectedImages] of pages) {
+  for (const [path, expectedImages, expectedSections] of pages) {
     const html = await (await render(path)).text();
     const gallerySections = [...html.matchAll(/<section\b[^>]*data-block-type=["']gallery["'][^>]*>(.*?)<\/section>/gis)];
-    assert.ok(gallerySections.length >= 2, `${path} gallery sections`);
+    assert.ok(gallerySections.length >= expectedSections, `${path} gallery sections`);
     const galleryHtml = gallerySections.map((match) => match[1]).join("\n");
     const figures = [...galleryHtml.matchAll(/<figure\b[^>]*class=["']gallery-item["'][^>]*>(.*?)<\/figure>/gis)];
     const imageTags = [...galleryHtml.matchAll(/<img\b[^>]*>/gi)].map((match) => match[0]);
@@ -465,7 +493,7 @@ test("renders self-hosted gallery media with explicit accessible dimensions", as
       const alt = tag.match(/\balt=["']([^"']*)["']/i)?.[1] ?? "";
       const width = Number(tag.match(/\bwidth=["'](\d+)["']/i)?.[1] ?? 0);
       const height = Number(tag.match(/\bheight=["'](\d+)["']/i)?.[1] ?? 0);
-      assert.match(src, /^\/(?:company|open-halo)\//, `${path} local image`);
+      assert.match(src, /^\/(?:company|open-halo|partners)\//, `${path} local image`);
       assert.ok(alt.trim().length > 0, `${src} alt`);
       assert.ok(width > 0 && height > 0, `${src} dimensions`);
       assert.match(tag, /\bloading=["']lazy["']/i, `${src} lazy`);
@@ -535,7 +563,6 @@ test("keeps inactive routes on the exact public 404 shell", async () => {
   for (const path of [
     "/404/",
     "/case-studies/",
-    "/partners/",
     "/partners/apply/",
     "/privacy/",
     "/accessibility/",
@@ -583,10 +610,12 @@ test("keeps the controlled primary shell order and one native no-JavaScript tree
     "Documentation",
     "Evidence &amp; Validation",
     "Evaluation Checklist",
-    "Company",
-    "Company links",
-    "About Halo Tech",
-    "openHalo",
+    "Open Source",
+    "About Us",
+    "About Us links",
+    "About Us",
+    "Contact Us",
+    "Partners",
     "Product Access",
     "Plan a PoC",
   ];
@@ -598,7 +627,27 @@ test("keeps the controlled primary shell order and one native no-JavaScript tree
   }
   assert.equal(count(primary, /<details\b/gi), 3);
   assert.equal(count(html, /<details\b[^>]*class=["']primary-menu["']/gi), 1);
-  assert.doesNotMatch(primary, /Case Studies|Partners|Privacy|Accessibility/);
+  assert.match(primary, /<li\b[^>]*class=["']menu-section["'][^>]*>[\s\S]*?<a\b[^>]*href=["']\/open-halo\/["'][^>]*>Open Source<\/a>[\s\S]*?<\/li>/i);
+  const aboutGroup = primary.match(/<a\b[^>]*href=["']\/company\/["'][^>]*>About Us<\/a>\s*<details\b[^>]*class=["']nav-disclosure["'][^>]*>([\s\S]*?)<\/details>/i)?.[1] ?? "";
+  assert.match(aboutGroup, /href=["']\/company\/["'][^>]*>About Us<\/a>/i);
+  assert.match(aboutGroup, /href=["']\/contact-us\/["'][^>]*>Contact Us<\/a>/i);
+  assert.match(aboutGroup, /href=["']\/partners\/["'][^>]*>Partners<\/a>/i);
+  assert.doesNotMatch(aboutGroup, /open-halo|openHalo/i);
+  assert.doesNotMatch(primary, /Case Studies|Privacy|Accessibility/);
+
+  const footer = html.match(/<nav\b[^>]*aria-label=["']Footer["'][^>]*>(.*?)<\/nav>/is)?.[1] ?? "";
+  const footerAbout = footer.match(/<section\b[^>]*class=["']footer-group["'][^>]*>\s*<h2>About Us<\/h2>([\s\S]*?)<\/section>/i)?.[1] ?? "";
+  const footerOpenSource = footer.match(/<section\b[^>]*class=["']footer-group["'][^>]*>\s*<h2>Open Source<\/h2>([\s\S]*?)<\/section>/i)?.[1] ?? "";
+  const footerAboutLinks = Array.from(
+    footerAbout.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>([^<]+)<\/a>/gi),
+    ([, href, label]) => [href, label.trim()],
+  );
+  assert.deepEqual(footerAboutLinks, [
+    ["/company/", "About Us"],
+    ["/contact-us/", "Contact Us"],
+    ["/partners/", "Partners"],
+  ]);
+  assert.match(footerOpenSource, /href=["']\/open-halo\/["'][^>]*>openHalo<\/a>/i);
 });
 
 test("keeps every rendered internal destination live and canonically slashed", async () => {
@@ -655,7 +704,6 @@ test("ships no gated copy or disposable starter implementation to public assets"
     "SkeletonPreview",
     "codex-preview",
     "/case-studies/",
-    "/partners/",
     "/partners/apply/",
     "/privacy/",
     "/accessibility/",

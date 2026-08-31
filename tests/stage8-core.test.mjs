@@ -137,6 +137,8 @@ test("fails robots and sitemap closed until the release context is active", () =
   const urls = buildSitemapUrls(active, [
     page("P01", "/", "index, follow", "/"),
     page("P02", "/product/", "index, follow", "/product/"),
+    page("P27", "/contact-us/", "index, follow", "/contact-us/"),
+    page("P13", "/partners/", "index, follow", "/partners/"),
     page("P26", "/open-halo/", "index, follow", "/open-halo/"),
     page("P15", "/request-poc/", "noindex, follow", "/request-poc/"),
     page("P20", "/404/", "noindex, follow", null),
@@ -144,7 +146,9 @@ test("fails robots and sitemap closed until the release context is active", () =
   ]);
   assert.deepEqual(urls, [
     "https://halo.example.com/",
+    "https://halo.example.com/contact-us/",
     "https://halo.example.com/open-halo/",
+    "https://halo.example.com/partners/",
     "https://halo.example.com/product/",
   ]);
 });
@@ -163,11 +167,19 @@ test("accepts only the closed non-personal analytics vocabulary and records noth
   assert.equal(noOpAnalyticsSink(event), false);
   assert.equal(isClosedAnalyticsEvent({
     name: "page_view",
-    dimensions: { page_group: "company", canonical_path: "/open-halo/" },
+    dimensions: { page_group: "open-source", canonical_path: "/open-halo/" },
   }), true);
   assert.equal(isClosedAnalyticsEvent({
     name: "cta_select",
-    dimensions: { page_group: "company", conversion_intent: "sales", cta_source: "open-halo" },
+    dimensions: { page_group: "open-source", conversion_intent: "sales", cta_source: "open-halo" },
+  }), true);
+  assert.equal(isClosedAnalyticsEvent({
+    name: "page_view",
+    dimensions: { page_group: "company", canonical_path: "/contact-us/" },
+  }), true);
+  assert.equal(isClosedAnalyticsEvent({
+    name: "cta_select",
+    dimensions: { page_group: "partner", conversion_intent: "partner", cta_source: "partners-final" },
   }), true);
 
   for (const value of [

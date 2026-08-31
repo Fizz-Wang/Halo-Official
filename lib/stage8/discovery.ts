@@ -17,6 +17,8 @@ export const baseSitemapEligibility = [
   { id: "P10", path: "/resources/evidence/", canonicalPath: "/resources/evidence/" },
   { id: "P11", path: "/resources/evaluation-checklist/", canonicalPath: "/resources/evaluation-checklist/" },
   { id: "P14", path: "/company/", canonicalPath: "/company/" },
+  { id: "P27", path: "/contact-us/", canonicalPath: "/contact-us/" },
+  { id: "P13", path: "/partners/", canonicalPath: "/partners/" },
   { id: "P26", path: "/open-halo/", canonicalPath: "/open-halo/" },
 ] as const;
 

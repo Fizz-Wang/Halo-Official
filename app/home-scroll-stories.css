@@ -733,8 +733,9 @@
 
 /* Availability: authority gates, a visible safe stop, then conditional movement. */
 .home-availability-state-machine {
+  --availability-machine-columns: minmax(130px, 1fr) minmax(190px, 1.2fr) minmax(130px, 1fr);
   display: grid;
-  grid-template-rows: auto auto auto 1fr auto auto auto;
+  grid-template-rows: auto auto auto auto auto minmax(0, 1fr) auto auto;
   gap: 14px;
   color: #edf8f7;
   background:
@@ -792,9 +793,17 @@
 .home-availability-machine {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(130px, 1fr) minmax(190px, 1.2fr) minmax(130px, 1fr);
+  grid-template-columns: var(--availability-machine-columns);
   align-items: stretch;
   gap: 10px;
+}
+
+.home-availability-status-slot {
+  display: grid;
+  grid-template-columns: var(--availability-machine-columns);
+  align-items: center;
+  gap: 10px;
+  min-height: 58px;
 }
 
 .home-availability-machine > article,
@@ -852,10 +861,11 @@
 }
 
 .home-availability-hold {
-  position: absolute;
+  position: relative;
   z-index: 4;
-  right: 25%;
-  bottom: -42px;
+  grid-column: 2 / 4;
+  justify-self: center;
+  width: min(100%, 310px);
   min-height: auto;
   padding: 10px 14px;
   color: #ffd3c1;
@@ -921,6 +931,10 @@
   line-height: 1.38;
 }
 
+.home-availability-steps {
+  margin-top: 0;
+}
+
 .home-availability-result,
 .home-routing-result {
   display: flex;
@@ -955,13 +969,20 @@
 }
 
 .home-routing-canvas {
+  --routing-connector-width: clamp(38px, 4vw, 54px);
+  --routing-columns: minmax(130px, 0.8fr) var(--routing-connector-width) minmax(170px, 1fr) var(--routing-connector-width) minmax(210px, 1.35fr);
   position: relative;
   display: grid;
-  grid-template-columns: minmax(130px, 0.8fr) minmax(170px, 1fr) minmax(210px, 1.35fr);
+  grid-template-columns: var(--routing-columns);
   align-items: center;
-  gap: clamp(26px, 4vw, 54px);
+  gap: 0;
   min-height: 250px;
   padding: 18px 0;
+}
+
+.home-routing-connection {
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .home-routing-connection,
@@ -996,11 +1017,15 @@
 }
 
 .home-routing-classifier {
+  grid-column: 3;
+  grid-row: 1;
   border-color: rgba(182, 84, 44, 0.38);
   box-shadow: 0 12px 30px rgba(72, 39, 24, 0.09);
 }
 
 .home-routing-targets {
+  grid-column: 5;
+  grid-row: 1;
   display: grid;
   gap: 12px;
 }
@@ -1012,12 +1037,32 @@
 .home-routing-line {
   position: absolute;
   z-index: 1;
+  right: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: var(--routing-columns);
+  align-items: center;
   height: 2px;
-  background: currentColor;
+  pointer-events: none;
   transform-origin: left;
 }
 
-.home-routing-line::after {
+.home-routing-line__segment {
+  position: relative;
+  display: block;
+  height: 2px;
+  background: currentColor;
+}
+
+.home-routing-line__segment--source {
+  grid-column: 2;
+}
+
+.home-routing-line__segment--target {
+  grid-column: 4;
+}
+
+.home-routing-line__segment--target::after {
   content: "";
   position: absolute;
   top: 50%;
@@ -1029,21 +1074,41 @@
   transform: translateY(-50%) rotate(45deg);
 }
 
-.home-routing-line--read { left: 13%; top: 40%; width: 70%; color: #16736c; }
-.home-routing-line--write { left: 13%; top: 61%; width: 70%; color: #b6542c; }
-.home-routing-line--return { left: 33%; top: 77%; width: 49%; color: #886c5d; }
+.home-routing-line--read { top: 40%; color: #16736c; }
+.home-routing-line--write { top: 61%; color: #b6542c; }
+.home-routing-line--return { top: 77%; color: #886c5d; }
 .home-routing-line--replication { right: 3%; top: 50%; width: 18%; color: #b8a89e; transform: rotate(90deg); }
 
-.home-routing-line--return::after {
+.home-routing-line--return .home-routing-line__segment--target::after {
+  content: none;
+}
+
+.home-routing-line--return .home-routing-line__segment--source::after {
+  content: "";
+  position: absolute;
+  top: 50%;
   right: auto;
   left: -1px;
+  width: 7px;
+  height: 7px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
   transform: translateY(-50%) rotate(-135deg);
+}
+
+.home-routing-token-slot {
+  position: relative;
+  z-index: 5;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: stretch;
+  min-width: 0;
+  pointer-events: none;
 }
 
 .home-routing-token {
   position: absolute;
-  z-index: 5;
-  left: 10%;
+  left: 50%;
   top: 33%;
   display: grid;
   place-items: center;
@@ -1054,6 +1119,7 @@
   border-radius: 6px;
   box-shadow: 0 6px 16px rgba(79, 37, 20, 0.2);
   font: 780 0.48rem/1 var(--font-mono);
+  transform: translate(-50%, -50%);
 }
 
 .home-routing-steps {
@@ -1079,10 +1145,11 @@
 
 /* HDS: spatial selection makes pruning visible before route and pushdown. */
 .home-sharding-space {
+  --sharding-column-gap: 13px;
   display: grid;
   grid-template-columns: 0.72fr 0.9fr 1.45fr;
   grid-template-rows: auto auto 1fr auto auto auto;
-  gap: 13px;
+  gap: var(--sharding-column-gap);
   background:
     radial-gradient(circle at 74% 55%, rgba(22, 115, 108, 0.08), transparent 27%),
     linear-gradient(rgba(30, 85, 81, 0.06) 1px, transparent 1px),
@@ -1180,9 +1247,17 @@
   font: 680 0.51rem/1.25 var(--font-mono);
 }
 
-.home-sharding-nodes {
+.home-sharding-node-stage {
   grid-row: 2 / 4;
   grid-column: 3;
+  display: grid;
+  grid-template-rows: 28px minmax(0, 1fr);
+  min-width: 0;
+}
+
+.home-sharding-nodes {
+  grid-row: 2;
+  grid-column: 1;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 7px;
@@ -1212,25 +1287,48 @@
 }
 
 .home-sharding-route {
-  position: absolute;
-  z-index: 0;
-  top: 43%;
-  left: 35%;
-  width: 39%;
-  height: 2px;
-  background: rgba(22, 115, 108, 0.22);
+  position: relative;
+  z-index: 1;
+  grid-row: 1;
+  grid-column: 1;
+  min-width: 0;
+  overflow: visible;
   transform-origin: left;
 }
 
-.home-sharding-route i {
+.home-sharding-route__trunk,
+.home-sharding-route__drop {
   position: absolute;
-  right: -2px;
+  display: block;
+  background: rgba(22, 115, 108, 0.72);
+}
+
+.home-sharding-route__trunk {
   top: 50%;
-  width: 9px;
-  height: 9px;
-  border-top: 2px solid #16736c;
+  left: calc(-1 * var(--sharding-column-gap));
+  width: calc(50% + var(--sharding-column-gap));
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.home-sharding-route__drop {
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 50%;
+  transform: translateX(-50%);
+}
+
+.home-sharding-route__drop::after {
+  content: "";
+  position: absolute;
+  right: 50%;
+  bottom: -1px;
+  width: 8px;
+  height: 8px;
   border-right: 2px solid #16736c;
-  transform: translateY(-50%) rotate(45deg);
+  border-bottom: 2px solid #16736c;
+  transform: translate(50%, -1px) rotate(45deg);
 }
 
 .home-sharding-result {
@@ -1372,6 +1470,10 @@
   .story-scroll-ready .home-routing-switchboard,
   .story-scroll-ready .home-sharding-space {
     gap: 9px;
+  }
+
+  .story-scroll-ready .home-sharding-space {
+    --sharding-column-gap: 9px;
   }
 
   .story-scroll-ready .home-migration-track {
@@ -1521,7 +1623,7 @@
 }
 
 /* Mobile/coarse-pointer structure; readable type metrics are centralized below. */
-@media (max-width: 1179px), (max-height: 863px), (pointer: coarse) {
+@media (max-width: 1179px), (max-height: 863px), (pointer: coarse), (prefers-reduced-motion: reduce) {
   .home-technology-journeys-intro {
     padding-block: 84px 70px;
   }
@@ -1760,6 +1862,12 @@
     margin-bottom: 12px;
   }
 
+  .home-availability-status-slot {
+    display: block;
+    min-height: 0;
+    margin-bottom: 12px;
+  }
+
   .home-availability-machine {
     grid-template-columns: 1fr;
   }
@@ -1771,6 +1879,7 @@
 
   .home-availability-hold {
     position: static;
+    width: 100%;
     min-height: auto;
   }
 
@@ -1793,26 +1902,38 @@
     padding: 0;
   }
 
+  .home-routing-connection,
+  .home-routing-classifier,
+  .home-routing-targets {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
   .home-routing-targets {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
 
   .home-routing-line,
-  .home-routing-token {
+  .home-routing-token,
+  .home-routing-token-slot {
     display: none;
   }
 
   .home-sharding-query,
   .home-sharding-logical,
   .home-sharding-worker,
-  .home-sharding-nodes,
+  .home-sharding-node-stage,
   .home-sharding-result {
     margin-top: 10px;
   }
 
   .home-sharding-worker {
     display: grid;
+  }
+
+  .home-sharding-node-stage {
+    display: block;
   }
 
   .home-sharding-nodes {
@@ -1998,6 +2119,7 @@
   .home-availability-signal,
   .home-availability-service-rail small,
   .home-availability-machine small,
+  .home-availability-hold small,
   .home-routing-canvas small,
   .home-routing-classifier small,
   .home-sharding-space small,
@@ -2058,6 +2180,36 @@
 .home-scroll-story .home-migration-decision span {
   font-size: max(0.8rem, 13px);
   line-height: 1.2;
+}
+
+.home-scroll-story :is(
+  .home-migration-steps,
+  .home-availability-steps,
+  .home-routing-steps,
+  .home-sharding-steps
+) li > span,
+.home-scroll-story .home-migration-steps li > i {
+  font-size: max(0.76rem, 12px);
+}
+
+.home-scroll-story :is(
+  .home-migration-steps,
+  .home-availability-steps,
+  .home-routing-steps,
+  .home-sharding-steps
+) li > strong {
+  font-size: max(0.95rem, 15px);
+  line-height: 1.3;
+}
+
+.home-scroll-story :is(
+  .home-migration-steps,
+  .home-availability-steps,
+  .home-routing-steps,
+  .home-sharding-steps
+) li > small {
+  font-size: max(0.82rem, 13px);
+  line-height: 1.42;
 }
 
 @media (min-width: 1180px) and (min-height: 864px) and (pointer: fine) {
@@ -2128,12 +2280,54 @@
     min-height: 610px;
   }
 
+  .story-scroll-ready .home-availability-state-machine {
+    height: min(80vh, 700px);
+    min-height: 690px;
+    gap: 7px;
+  }
+
+  .story-scroll-ready .home-availability-machine > article,
+  .story-scroll-ready .home-availability-gate {
+    min-height: 100px;
+  }
+
+  .story-scroll-ready .home-availability-status-slot {
+    min-height: 52px;
+  }
+
+  .story-scroll-ready .home-availability-hold {
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    width: min(100%, 520px);
+    min-height: 52px;
+    gap: 12px;
+    padding: 8px 12px;
+  }
+
+  .story-scroll-ready .home-availability-hold small,
+  .story-scroll-ready .home-availability-hold strong {
+    line-height: 1.25;
+  }
+
+  .story-scroll-ready .home-story-copy--sharding .home-story-causality {
+    margin-top: 18px;
+  }
+
+  .story-scroll-ready .home-story-copy--sharding .home-story-actions {
+    margin-top: 20px;
+  }
+
   .story-scroll-ready :is(
     .home-migration-steps,
     .home-availability-steps
   ) {
     position: relative;
     padding-bottom: 76px;
+  }
+
+  .story-scroll-ready .home-availability-steps {
+    min-height: 130px;
   }
 
   .story-scroll-ready .home-migration-steps {
@@ -2320,6 +2514,11 @@
     transform: none;
   }
 
+  .story-scroll-ready .home-story-stage--availability .home-story-progress {
+    top: calc(var(--header-height) + 6px);
+    min-height: 24px;
+  }
+
   .story-scroll-ready .home-story-progress__track {
     width: 92px;
     height: 3px;
@@ -2354,8 +2553,10 @@
   }
 
   .story-scroll-ready .home-routing-canvas {
-    grid-template-columns: minmax(110px, 0.8fr) minmax(150px, 1fr) minmax(180px, 1.35fr);
-    gap: clamp(18px, 2vw, 30px);
+    --routing-connector-width: clamp(38px, 3vw, 44px);
+    --routing-columns: minmax(110px, 0.8fr) var(--routing-connector-width) minmax(150px, 1fr) var(--routing-connector-width) minmax(180px, 1.35fr);
+    grid-template-columns: var(--routing-columns);
+    gap: 0;
   }
 
   .story-scroll-ready .home-routing-steps {
@@ -2406,6 +2607,11 @@
   ) {
     height: min(75vh, 648px);
     min-height: 630px;
+  }
+
+  .story-scroll-ready .home-availability-state-machine {
+    height: min(80vh, 700px);
+    min-height: 690px;
   }
 
   .story-scroll-ready .home-story-causality {
@@ -2599,6 +2805,7 @@
   .home-compat-kernel,
   .home-migration-steps li,
   .home-availability-machine > *,
+  .home-availability-hold,
   .home-routing-canvas > *,
   .home-sharding-space > *,
   .home-scroll-story .home-routing-classifier,

@@ -58,7 +58,8 @@ export type PageId =
   | "P22"
   | "P23"
   | "P24"
-  | "P25";
+  | "P25"
+  | "P26";
 
 export type ActiveRoutePath =
   | "/"
@@ -77,6 +78,7 @@ export type ActiveRoutePath =
   | "/resources/evidence/"
   | "/resources/evaluation-checklist/"
   | "/company/"
+  | "/open-halo/"
   | "/request-poc/"
   | "/contact-sales/"
   | "/request-demo/"
@@ -257,6 +259,25 @@ export interface FactsBlock {
   readonly items: readonly FactItem[];
 }
 
+export interface GalleryItem {
+  readonly src: string;
+  readonly alt: string;
+  readonly width: number;
+  readonly height: number;
+  readonly caption?: string;
+  readonly href?: string;
+}
+
+export interface GalleryBlock {
+  readonly type: "gallery";
+  readonly anchor?: string;
+  readonly heading: string;
+  readonly intro?: readonly string[];
+  readonly layout: "single" | "grid" | "wall";
+  readonly fit: "contain" | "cover";
+  readonly items: readonly GalleryItem[];
+}
+
 /** Exhaustive renderer union; switch on `type`. */
 export type ContentBlock =
   | ProseBlock
@@ -270,7 +291,8 @@ export type ContentBlock =
   | CtaBlock
   | AccordionBlock
   | DiagramBlock
-  | FactsBlock;
+  | FactsBlock
+  | GalleryBlock;
 
 export interface SeoRecord {
   readonly title: string;
@@ -425,7 +447,7 @@ const legacySitePages = [
     hero: {
       eyebrow: "HALO DATABASE",
       h1: "Bring mixed database workloads onto one Halo platform.",
-      lead: "Halo is a general-purpose database built on the openHalo kernel. Halo 1.0.16 documents Oracle, MySQL, and PostgreSQL operating modes within one cluster, while enterprise services cover migration, recovery, read scaling, distributed data, and day-to-day operations.",
+      lead: "Halo is a general-purpose commercial database. Halo 1.0.16 documents Oracle, MySQL, and PostgreSQL operating modes within one cluster, while enterprise services cover migration, recovery, read scaling, distributed data, and day-to-day operations.",
       actions: [
         {
           label: "Explore the platform",

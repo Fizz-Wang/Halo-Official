@@ -20,7 +20,7 @@ export const manualCorePages = [
       eyebrow: "HALO DATABASE PLATFORM",
       h1: "A unified database platform for compatibility-led modernization.",
       lead:
-        "Halo is a general-purpose database built on the openHalo kernel. It combines Oracle, MySQL, and native PostgreSQL operating modes with transactional storage, continuity, recovery, distributed-data options, and DBA tooling.",
+        "Halo is a general-purpose commercial database with Oracle, MySQL, and native PostgreSQL operating modes, transactional storage, continuity, recovery, distributed-data options, and DBA tooling.",
       actions: [
         { label: "Explore compatibility", href: "/product/compatibility/", kind: "primary" },
         { label: "See the architecture", href: "/product/architecture/", kind: "secondary" },
@@ -117,7 +117,7 @@ export const manualCorePages = [
           { heading: "2021 — Halo 1.0.13", body: ["The first V1 release extended Oracle-oriented procedural compatibility."] },
           { heading: "2022 — First LTS", body: ["Halo 1.0.14 introduced E5, GB18030 support, PL/SQL Package capability, and MySQL protocol and syntax support."] },
           { heading: "2023 — Halo 1.0.15", body: ["Procedural and Oracle sequence behavior continued to expand."] },
-          { heading: "June 2024 — Second LTS", body: ["Halo 1.0.16 documented Oracle, MySQL, and PostgreSQL operating modes within one cluster and additional distributed components. The enterprise kernel lineage was later released as openHalo."] },
+          { heading: "June 2024 — Second LTS", body: ["Halo 1.0.16 documented Oracle, MySQL, and PostgreSQL operating modes within one cluster and additional distributed components."] },
         ],
       },
       {
@@ -134,7 +134,7 @@ export const manualCorePages = [
         body: ["Define the application dependencies, target architecture, and acceptance evidence before selecting a migration or deployment path."],
         actions: [
           { label: "Use the PoC method", href: "/evaluation/", kind: "primary" },
-          { label: "Prepare a PoC", href: "/request-poc/?source=product", kind: "secondary" },
+          { label: "Plan a PoC", href: "/request-poc/?source=product", kind: "secondary" },
         ],
       },
     ],
@@ -416,7 +416,7 @@ export const manualCorePages = [
       h1: "Evaluate compatibility before you estimate the rewrite.",
       lead: "Halo documents Oracle-oriented behavior across protocol, data types, SQL semantics, PL/oraSQL, Package, dictionary views, and remote access. A migration evaluation shows what can remain, what needs configuration, and what still requires change.",
       actions: [
-        { label: "Prepare a workload PoC", href: "/request-poc/?source=oracle-migration", kind: "primary" },
+        { label: "Plan a PoC", href: "/request-poc/?source=oracle-migration", kind: "primary" },
         { label: "Explore Oracle compatibility", href: "/product/compatibility/#oracle", kind: "secondary" },
       ],
     },
@@ -502,7 +502,7 @@ export const manualCorePages = [
         type: "cta",
         heading: "Build the migration case from representative evidence.",
         actions: [
-          { label: "Prepare a PoC", href: "/request-poc/?source=oracle-migration-final", kind: "primary" },
+          { label: "Plan a PoC", href: "/request-poc/?source=oracle-migration-final", kind: "primary" },
           { label: "Open the evaluation checklist", href: "/resources/evaluation-checklist/", kind: "secondary" },
         ],
       },

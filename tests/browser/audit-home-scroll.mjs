@@ -7,6 +7,7 @@ import {
   launchBrowser,
   parseArgs,
 } from "./chrome-harness.mjs";
+import { auditStoryOcclusions } from "./story-layout-assertions.mjs";
 
 const args = parseArgs();
 const targetUrl = String(args.url || "http://localhost:3105/");
@@ -30,6 +31,8 @@ const PROFILES = [
   { id: "compact-1024x768", width: 1024, height: 768, scale: 1 },
   { id: "short-1440x720", width: 1440, height: 720, scale: 1 },
   { id: "zoom125-1536x864", width: 1536, height: 864, scale: 1.25, expectedStoryScrollReady: true },
+  { id: "hidpi-1756x963", width: 1756, height: 963, scale: 1.75, expectedStoryScrollReady: true },
+  { id: "reduced-1440x900", width: 1440, height: 900, scale: 1, reducedMotion: "reduce", expectedStoryScrollReady: false },
   { id: "zoom150-1280x720", width: 1280, height: 720, scale: 1.5 },
   { id: "zoom175-1097x617", width: 1097, height: 617, scale: 1.75 },
   { id: "zoom200-960x540", width: 960, height: 540, scale: 2 },
@@ -50,7 +53,7 @@ function screenshotName({ story, state, profile, browserName }) {
 }
 
 async function auditVisibleLayout(page, rootSelector = null) {
-  return page.evaluate(({ explicitRootSelector }) => {
+  const baseAudit = await page.evaluate(({ explicitRootSelector }) => {
     const issues = [];
     const viewport = { width: window.innerWidth, height: window.innerHeight };
     const root = document.documentElement;
@@ -489,6 +492,8 @@ async function auditVisibleLayout(page, rootSelector = null) {
       issues,
     };
   }, { explicitRootSelector: rootSelector });
+  const semanticIssues = await page.evaluate(auditStoryOcclusions, rootSelector);
+  return { ...baseAudit, issues: [...baseAudit.issues, ...semanticIssues] };
 }
 
 async function settleAt(page, position, animated) {
@@ -515,7 +520,7 @@ for (const browserName of requestedBrowsers) {
       deviceScaleFactor: profile.scale,
       hasTouch: Boolean(profile.hasTouch),
       isMobile: Boolean(profile.isMobile),
-      reducedMotion: "no-preference",
+      reducedMotion: profile.reducedMotion ?? "no-preference",
     });
     const page = await context.newPage();
     page.on("console", (message) => {

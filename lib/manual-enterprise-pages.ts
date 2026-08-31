@@ -122,7 +122,7 @@ export const manualEnterprisePages = [
       {
         type: "cta",
         heading: "Make recovery objectives testable.",
-        actions: [{ label: "Plan an availability PoC", href: "/request-poc/?source=availability", kind: "primary" }],
+        actions: [{ label: "Plan a PoC", href: "/request-poc/?source=availability", kind: "primary" }],
       },
     ],
     withheldModules: [],
@@ -153,7 +153,7 @@ export const manualEnterprisePages = [
       h1: "Distribute reads, writes, and data with explicit architecture choices.",
       lead: "Halo documents separate mechanisms for read scaling, write forwarding, distributed shared storage, and sharded data placement. Each addresses a different constraint; none is presented as a universal distributed-database mode.",
       actions: [
-        { label: "Review a distributed PoC", href: "/request-poc/?source=distributed", kind: "primary" },
+        { label: "Plan a PoC", href: "/request-poc/?source=distributed", kind: "primary" },
         { label: "Explore core architecture", href: "/product/architecture/", kind: "secondary" },
       ],
     },
@@ -256,7 +256,7 @@ export const manualEnterprisePages = [
       {
         type: "cta",
         heading: "Validate the component and topology together.",
-        actions: [{ label: "Prepare a distributed-data PoC", href: "/request-poc/?source=distributed-final", kind: "primary" }],
+        actions: [{ label: "Plan a PoC", href: "/request-poc/?source=distributed-final", kind: "primary" }],
       },
     ],
     withheldModules: [],
@@ -376,7 +376,7 @@ export const manualEnterprisePages = [
       {
         type: "cta",
         heading: "Make the operating model part of the evaluation.",
-        actions: [{ label: "Build an operations PoC", href: "/request-poc/?source=operations", kind: "primary" }],
+        actions: [{ label: "Plan a PoC", href: "/request-poc/?source=operations", kind: "primary" }],
       },
     ],
     withheldModules: [],
@@ -407,7 +407,7 @@ export const manualEnterprisePages = [
       h1: "Extend the database where the documented capability fits.",
       lead: "Halo combines a broad SQL object model with optional modules for diagnostics, indexing, text processing, federation, security, data types, events, and sampling. Its catalogs also document a modest in-database model/runtime foundation.",
       actions: [
-        { label: "Validate extension requirements", href: "/request-poc/?source=data-platform", kind: "primary" },
+        { label: "Plan a PoC", href: "/request-poc/?source=data-platform", kind: "primary" },
         { label: "Explore core architecture", href: "/product/architecture/", kind: "secondary" },
       ],
     },
@@ -504,7 +504,7 @@ export const manualEnterprisePages = [
       {
         type: "cta",
         heading: "Bring extension and MRT requirements into the PoC scope.",
-        actions: [{ label: "Prepare a technical evaluation", href: "/request-poc/?source=data-platform-final", kind: "primary" }],
+        actions: [{ label: "Plan a PoC", href: "/request-poc/?source=data-platform-final", kind: "primary" }],
       },
     ],
     withheldModules: [],

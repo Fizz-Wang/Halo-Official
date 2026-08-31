@@ -240,7 +240,7 @@ function buildAvailability(gsap: GsapApi, timeline: GSAPTimeline, story: HTMLEle
   reveal(timeline, steps[3] ? [steps[3]] : [], {}, "fence+=0.12", 0.34);
   timeline.addLabel("promote", 3.8);
   reveal(timeline, motion(story, "availability-replica"), { yPercent: 16, scale: 0.94 }, "promote", 0.45);
-  timeline.to(hold, { yPercent: -8, scale: 0.985, duration: 0.35, ease: "none" }, "promote");
+  timeline.to(hold, { autoAlpha: 0, yPercent: -8, scale: 0.985, duration: 0.35, ease: "none" }, "promote");
   timeline.addLabel("vip", 4.45);
   timeline.to(vip, { scaleX: 1, duration: 0.55, ease: "none" }, "vip");
   reveal(timeline, steps[4] ? [steps[4]] : [], {}, "vip+=0.08", 0.34);
@@ -261,13 +261,19 @@ function buildRouting(timeline: GSAPTimeline, story: HTMLElement) {
   reveal(timeline, motion(story, "routing-token"), { scale: 0.78 }, "write", 0.32);
   reveal(timeline, Array.from(story.querySelectorAll<HTMLElement>(".home-routing-classifier")), { yPercent: 12 }, "classify", 0.42);
   reveal(timeline, targetCards[0] ? [targetCards[0]] : [], { xPercent: 10 }, "read+=0.28", 0.42);
-  reveal(timeline, motion(story, "routing-read-path"), { scaleX: 0, transformOrigin: "left" }, "read+=0.08", 0.62);
+  const revealConnector = (token: string, at: string, transformOrigin: "left" | "right") => {
+    const paths = motion(story, token);
+    const segments = paths.flatMap((path) => Array.from(path.querySelectorAll<HTMLElement>("[data-connector-segment]")));
+    reveal(timeline, paths, {}, at, 0.12);
+    reveal(timeline, segments, { scaleX: 0, transformOrigin }, at, 0.62);
+  };
+  revealConnector("routing-read-path", "read+=0.08", "left");
   if (targetCards[0]) {
     timeline.to(targetCards[0], { autoAlpha: 0, xPercent: 4, duration: 0.24 }, "redirect");
   }
   reveal(timeline, targetCards[1] ? [targetCards[1]] : [], { xPercent: 10 }, "redirect", 0.42);
-  reveal(timeline, motion(story, "routing-write-path"), { scaleX: 0, transformOrigin: "left" }, "redirect+=0.12", 0.62);
-  reveal(timeline, motion(story, "routing-return-path"), { scaleX: 0, transformOrigin: "right" }, "return", 0.62);
+  revealConnector("routing-write-path", "redirect+=0.12", "left");
+  revealConnector("routing-return-path", "return", "right");
   timeline.addLabel("routing-result", 4.92);
   reveal(timeline, Array.from(story.querySelectorAll<HTMLElement>(".home-routing-result")), { yPercent: 12 }, "routing-result", 0.48);
 }
@@ -285,7 +291,12 @@ function buildSharding(timeline: GSAPTimeline, story: HTMLElement) {
   if (pruned.length) timeline.to(pruned, { scale: 0.94, duration: 0.6, ease: "none" }, "prune");
   reveal(timeline, steps[2] ? [steps[2]] : [], {}, "prune+=0.08", 0.34);
   timeline.addLabel("route", 2.75);
-  reveal(timeline, motion(story, "sharding-route"), { scaleX: 0, transformOrigin: "left" }, "route", 0.62);
+  const route = motion(story, "sharding-route");
+  const routeTrunk = Array.from(story.querySelectorAll<HTMLElement>(".home-sharding-route__trunk"));
+  const routeDrop = Array.from(story.querySelectorAll<HTMLElement>(".home-sharding-route__drop"));
+  reveal(timeline, route, {}, "route", 0.12);
+  reveal(timeline, routeTrunk, { scaleX: 0, transformOrigin: "left" }, "route", 0.62);
+  reveal(timeline, routeDrop, { scaleY: 0, transformOrigin: "top" }, "route+=0.48", 0.34);
   reveal(timeline, steps[3] ? [steps[3]] : [], {}, "route+=0.08", 0.34);
   const target = motion(story, "sharding-target");
   if (target.length) timeline.to(target, { scale: 1.06, duration: 0.3, yoyo: true, repeat: 1, ease: "none" }, "route+=0.34");

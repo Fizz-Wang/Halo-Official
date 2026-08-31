@@ -7,6 +7,7 @@ import {
   launchBrowser,
   parseArgs,
 } from "./chrome-harness.mjs";
+import { auditStoryOcclusions } from "./story-layout-assertions.mjs";
 
 const args = parseArgs();
 const targetUrl = String(args.url || "http://localhost:3106/");
@@ -34,7 +35,13 @@ const FRAME_SENTINELS = {
     selector: '[data-motion~="migration-evidence"]', index, opacityAtLeast: 0.98, translateXAtMost: 1,
   }]])),
   availability: {
-    vip: [{ selector: '[data-motion~="availability-vip"]', scaleX: 1, tolerance: 0.015 }],
+    vip: [
+      { selector: '[data-motion~="availability-vip"]', scaleX: 1, tolerance: 0.015 },
+      { selector: '[data-motion~="availability-hold"]', opacityAtMost: 0.05 },
+    ],
+    "availability-result": [
+      { selector: '[data-motion~="availability-hold"]', opacityAtMost: 0.05 },
+    ],
   },
   routing: {
     read: [{ selector: '[data-motion~="routing-read-path"]', opacityAtLeast: 0.98, scaleX: 1, tolerance: 0.015 }],
@@ -199,6 +206,7 @@ async function auditFrameCompletion(page, storyId, frameId) {
     const expected = sentinels[index];
     if (!value.found) return false;
     if (expected.opacityAtLeast !== undefined && value.opacity < expected.opacityAtLeast) return false;
+    if (expected.opacityAtMost !== undefined && value.opacity > expected.opacityAtMost) return false;
     if (expected.translateXAtMost !== undefined && Math.abs(value.translateX) > expected.translateXAtMost) return false;
     if (expected.scaleX !== undefined
       && Math.abs(value.scaleX - expected.scaleX) > (expected.tolerance ?? 0.01)) return false;
@@ -208,7 +216,7 @@ async function auditFrameCompletion(page, storyId, frameId) {
 }
 
 async function auditStepDetailLayout(page, storyId) {
-  return page.evaluate((id) => {
+  const baseAudit = await page.evaluate((id) => {
     const story = document.querySelector(`[data-scroll-story="${id}"]`);
     const list = story?.querySelector(
       ".home-migration-steps, .home-availability-steps, .home-routing-steps, .home-sharding-steps",
@@ -295,7 +303,7 @@ async function auditStepDetailLayout(page, storyId) {
         });
       }
     }
-    const figure = story.querySelector(".home-story-figure");
+    const figure = story.querySelector("figure");
     const auditElementBounds = (element, role) => {
       const rect = element.getBoundingClientRect();
       if (element.clientWidth > 0 && element.scrollWidth > element.clientWidth + 1) {
@@ -520,6 +528,9 @@ async function auditStepDetailLayout(page, storyId) {
     }
     return { ok: issues.length === 0, issues, counts };
   }, storyId);
+  const semanticIssues = await page.evaluate(auditStoryOcclusions, storyId);
+  const issues = [...baseAudit.issues, ...semanticIssues];
+  return { ...baseAudit, ok: issues.length === 0, issues };
 }
 
 async function stepAndAudit(page, storyId, expectedIndex, deltaY, options = {}) {

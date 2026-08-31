@@ -28,7 +28,8 @@ const activeRoutes = [
   ["/resources/documentation/", "Halo 1.0.16 Product Documentation Basis", "Product knowledge, reorganized for enterprise evaluation.", "index, follow", "See how the Halo 1.0.16 manual is reorganized into enterprise product, migration, architecture, and operations content."],
   ["/resources/evidence/", "Evidence & Validation | Halo Database", "See what each Halo claim establishes—and what it does not.", "index, follow", "See what material Halo statements establish, their manual source, their limits, and what a workload evaluation must validate."],
   ["/resources/evaluation-checklist/", "Halo Database Evaluation Checklist", "Bring the application, architecture, and decision criteria.", "index, follow", "Prepare the application, compatibility surface, data, workload, target architecture, operations, and acceptance record for a Halo PoC."],
-  ["/company/", "About Halo Tech | Halo Database", "Database engineering, from kernel to enterprise rollout.", "index, follow", "Meet the engineering team behind commercial Halo Database and the open-source openHalo project, and understand how to start an enterprise evaluation."],
+  ["/company/", "About Halo Tech | Halo Database", "Database engineering, from kernel to enterprise rollout.", "index, follow", "Meet Halo Tech, its engineering-led database team, full-lifecycle capabilities, company history, qualifications, and commercial and open-source paths."],
+  ["/open-halo/", "openHalo Open-Source Database Project | Halo Tech", "openHalo: open-source MySQL compatibility for PostgreSQL.", "index, follow", "Explore openHalo, a GPL-3.0 PostgreSQL project for commonly used MySQL dialects and protocol, designed to support migrations with fewer code changes."],
   ["/request-poc/", "Plan a Halo Database PoC", "Plan the workload. Halo Tech coordinates product access.", "noindex, follow", "Coordinate a Halo Database installation package, environment-specific license, and workload-focused proof of concept with Halo Tech."],
   ["/contact-sales/", "Halo Database Product Access & Licensing", "Discuss product access, licensing, and commercial fit.", "noindex, follow", "Contact Halo Tech about Halo Database installation packages, licenses, PoC access, procurement, and regional availability."],
   ["/request-demo/", "Prepare a Halo Database Demo Brief", "Choose the Halo capabilities you want to explore.", "noindex, follow", "Choose the Halo capabilities to organize for a future product introduction."],
@@ -337,10 +338,11 @@ test("activates production discovery only for the exact approved request origin"
   const sitemap = await releaseFetch("/sitemap.xml");
   const sitemapXml = await sitemap.text();
   const locations = [...sitemapXml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
-  assert.equal(locations.length, 15);
-  assert.equal(new Set(locations).size, 15);
+  assert.equal(locations.length, 16);
+  assert.equal(new Set(locations).size, 16);
   assert.ok(locations.every((url) => url.startsWith("https://halo.example.com/")));
   assert.ok(locations.every((url) => url.endsWith("/")));
+  assert.ok(locations.includes("https://halo.example.com/open-halo/"));
   for (const forbidden of [
     "/request-poc/",
     "/contact-sales/",
@@ -387,22 +389,107 @@ test("renders P07 as a five-step decision method with one comparison", async () 
 
 test("distinguishes commercial Halo Database access from openHalo", async () => {
   const company = await (await render("/company/")).text();
+  const openHalo = await (await render("/open-halo/")).text();
   const poc = await (await render("/request-poc/")).text();
   const sales = await (await render("/contact-sales/")).text();
   const documentation = await (await render("/resources/documentation/")).text();
+  const evaluation = await (await render("/evaluation/")).text();
+  const boundary = /Halo Database is commercial, licensed software\.[\s\S]*?Installation packages and evaluation licenses are coordinated with Halo Tech\.[\s\S]*?openHalo is a separate GPL-3\.0 open-source project\./i;
 
   assert.match(company, /Halo Database and openHalo serve different paths/i);
   assert.match(company, /Commercial, licensed enterprise database software[\s\S]*?GPL-3\.0 open-source database project/i);
-  assert.match(company, /https:\/\/github\.com\/HaloTech-Co-Ltd\/openHalo/i);
+  assert.match(company, /href=["']\/open-halo\/["']/i);
   assert.match(company, /support@halodbtech\.com/i);
+  assert.match(company, boundary);
+
+  assert.match(openHalo, /commonly used[\s\S]*?MySQL[\s\S]*?fewer code changes/i);
+  assert.match(openHalo, boundary);
+  assert.match(openHalo, /GPL-3\.0 OPEN SOURCE/i);
 
   assert.match(poc, /The installation package and license come from Halo Tech/i);
   assert.match(poc, /license is generated for server-environment information/i);
   assert.match(poc, /href=["']mailto:support@halodbtech\.com/i);
+  assert.match(poc, boundary);
 
   assert.match(sales, /Halo Database and openHalo have different access models/i);
-  assert.match(sales, /installation packages and license files are provided through company coordination/i);
+  assert.match(sales, /packages and license files are not obtained from the openHalo repository/i);
+  assert.match(sales, boundary);
   assert.match(documentation, /Public documentation is not a public Halo Database download/i);
+  assert.match(documentation, boundary);
+  assert.match(evaluation, boundary);
+
+  for (const path of ["/", "/product/", "/resources/", "/resources/evidence/"]) {
+    const html = await (await render(path)).text();
+    assert.doesNotMatch(html, /openHalo foundation|built on the openHalo kernel|openHalo-based/i, path);
+  }
+
+  assert.match(poc, /Email Halo Tech about a PoC/i);
+  assert.match(sales, /Email Halo Tech about product access/i);
+});
+
+test("keeps every company contact email-only and removes telephone entry points", async () => {
+  for (const [path] of activeRoutes) {
+    const html = await (await render(path)).text();
+    assert.doesNotMatch(html, /\btel:|0571-87168929|Call Halo Tech/i, path);
+  }
+});
+
+test("uses one label for every internal PoC entry point", async () => {
+  for (const [path] of activeRoutes) {
+    const html = await (await render(path)).text();
+    for (const match of html.matchAll(/<a\b[^>]*href=["']\/request-poc\/(?:\?[^"']*)?["'][^>]*>(.*?)<\/a>/gis)) {
+      assert.equal(tagText(`<span>${match[1]}</span>`, "span"), "Plan a PoC", path);
+    }
+  }
+});
+
+test("renders self-hosted gallery media with explicit accessible dimensions", async () => {
+  const pages = [
+    ["/company/", 6],
+    ["/open-halo/", 6],
+  ];
+
+  for (const [path, expectedImages] of pages) {
+    const html = await (await render(path)).text();
+    const gallerySections = [...html.matchAll(/<section\b[^>]*data-block-type=["']gallery["'][^>]*>(.*?)<\/section>/gis)];
+    assert.ok(gallerySections.length >= 2, `${path} gallery sections`);
+    const galleryHtml = gallerySections.map((match) => match[1]).join("\n");
+    const figures = [...galleryHtml.matchAll(/<figure\b[^>]*class=["']gallery-item["'][^>]*>(.*?)<\/figure>/gis)];
+    const imageTags = [...galleryHtml.matchAll(/<img\b[^>]*>/gi)].map((match) => match[0]);
+    assert.equal(figures.length, expectedImages, `${path} figures`);
+    assert.equal(imageTags.length, expectedImages, `${path} images`);
+    assert.equal(count(galleryHtml, /<figcaption\b/gi), expectedImages, `${path} captions`);
+
+    for (const tag of imageTags) {
+      const src = tag.match(/\bsrc=["']([^"']+)["']/i)?.[1] ?? "";
+      const alt = tag.match(/\balt=["']([^"']*)["']/i)?.[1] ?? "";
+      const width = Number(tag.match(/\bwidth=["'](\d+)["']/i)?.[1] ?? 0);
+      const height = Number(tag.match(/\bheight=["'](\d+)["']/i)?.[1] ?? 0);
+      assert.match(src, /^\/(?:company|open-halo)\//, `${path} local image`);
+      assert.ok(alt.trim().length > 0, `${src} alt`);
+      assert.ok(width > 0 && height > 0, `${src} dimensions`);
+      assert.match(tag, /\bloading=["']lazy["']/i, `${src} lazy`);
+      assert.ok((await readFile(new URL(src.slice(1), publicOutput))).length > 0, `${src} build asset`);
+    }
+  }
+});
+
+test("publishes the verified openHalo project and contribution destinations", async () => {
+  const html = await (await render("/open-halo/")).text();
+  const destinations = [
+    ["View on GitHub", "https://github.com/HaloTech-Co-Ltd/openHalo"],
+    ["Build from Source", "https://github.com/HaloTech-Co-Ltd/openHalo#quick-tutorial"],
+    ["View GPL-3.0 License", "https://github.com/HaloTech-Co-Ltd/openHalo/blob/master/LICENSE"],
+    ["Contribution Guide", "https://github.com/HaloTech-Co-Ltd/openHalo/blob/master/CONTRIBUTING.md"],
+    ["Browse Issues", "https://github.com/HaloTech-Co-Ltd/openHalo/issues"],
+    ["Join the Discussion", "https://github.com/HaloTech-Co-Ltd/openHalo/discussions"],
+    ["Visit openHalo.org", "https://www.openhalo.org/"],
+  ];
+
+  for (const [label, href] of destinations) {
+    assert.match(html, new RegExp(`href=["']${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}["'][^>]*>[\\s\\S]*?${label}`, "i"), label);
+  }
+  assert.doesNotMatch(html, /Report an Issue|Download Stable/i);
 });
 
 test("keeps the P05 recovery scenario record ordered", async () => {
@@ -497,8 +584,11 @@ test("keeps the controlled primary shell order and one native no-JavaScript tree
     "Evidence &amp; Validation",
     "Evaluation Checklist",
     "Company",
+    "Company links",
+    "About Halo Tech",
+    "openHalo",
     "Product Access",
-    "Prepare a PoC",
+    "Plan a PoC",
   ];
   let cursor = -1;
   for (const label of controlledOrder) {
@@ -506,7 +596,7 @@ test("keeps the controlled primary shell order and one native no-JavaScript tree
     assert.ok(next > cursor, label);
     cursor = next;
   }
-  assert.equal(count(primary, /<details\b/gi), 2);
+  assert.equal(count(primary, /<details\b/gi), 3);
   assert.equal(count(html, /<details\b[^>]*class=["']primary-menu["']/gi), 1);
   assert.doesNotMatch(primary, /Case Studies|Partners|Privacy|Accessibility/);
 });
@@ -520,6 +610,7 @@ test("keeps every rendered internal destination live and canonically slashed", a
       if (!href.startsWith("/") || href.startsWith("//")) continue;
       const url = new URL(href, "http://localhost");
       if (url.pathname.startsWith("/_next/")) continue;
+      if (/\.[a-z0-9]+$/i.test(url.pathname)) continue;
       assert.ok(url.pathname === "/" || url.pathname.endsWith("/"), href);
       hrefs.add(`${url.pathname}${url.search}`);
     }
@@ -743,7 +834,7 @@ test("ships five independent scroll stories as accessible progressive enhancemen
   assert.match(home, /2012[\s\S]*?≥95%[\s\S]*?45/i);
   assert.doesNotMatch(home, /second LTS/i);
   assert.match(home, /Reported from Oracle migration practice; workload-specific, not universal and not a forecast\./i);
-  assert.match(home, /Start with the proof you need\.[\s\S]*?Build your PoC scope[\s\S]*?Evaluate an Oracle workload[\s\S]*?Prepare a demo brief[\s\S]*?Ask about product access/i);
+  assert.match(home, /Start with the proof you need\.[\s\S]*?Open the evaluation checklist[\s\S]*?Evaluate an Oracle workload[\s\S]*?Prepare a demo brief[\s\S]*?Ask about product access/i);
   assert.doesNotMatch(home, /Technology explorer|Set the workload boundary|Record fit and decide|SQL firewall/i);
   assert.equal(count(home, /class=["']experience-progress["']/gi), 1);
   assert.equal(count(home, /class=["']experience-cursor["']/gi), 1);
@@ -793,6 +884,11 @@ test("ships five independent scroll stories as accessible progressive enhancemen
   assert.equal(count(homeStory, /data-story-replay/g), 1);
   assert.equal(count(homeStory, /data-story-jump=/g), 3);
   assert.equal(count(homeStory, /<b className="sr-only">Range <\/b>/g), 3);
+  assert.match(homeStory, /home-availability-status-slot[\s\S]*?home-availability-hold/);
+  assert.match(homeStory, /home-routing-token-slot[\s\S]*?data-motion="routing-token"/);
+  assert.equal(count(homeStory, /home-routing-line__segment--source/g), 3);
+  assert.equal(count(homeStory, /home-routing-line__segment--target/g), 3);
+  assert.match(homeStory, /home-sharding-node-stage[\s\S]*?home-sharding-route__trunk[\s\S]*?home-sharding-route__drop/);
   assert.doesNotMatch(homeStory, /aria-label="Range [ABC]"/);
   assert.match(homeStory, /<HomeStoryMotionClient \/>/);
   assert.doesNotMatch(homeStory, /onPointerEnter|onFocus|<canvas/);
@@ -812,6 +908,7 @@ test("ships five independent scroll stories as accessible progressive enhancemen
   assert.match(homeStoryMotion, /queuedGestureActive/);
   assert.match(homeStoryMotion, /queuedStepDirection/);
   assert.match(homeStoryMotion, /Math\.abs\(queuedWheelAccumulator\) < WHEEL_STEP_THRESHOLD/);
+  assert.match(homeStoryMotion, /hold[\s\S]*?autoAlpha:\s*0/);
   assert.doesNotMatch(homeStoryMotion, /if \(gestureCommitted\) scheduleGestureQuiet\(\)/);
   assert.match(homeStoryMotion, /event\.ctrlKey \|\| event\.metaKey/);
   assert.match(homeStoryMotion, /data-story-stop-y|storyStopY/);

@@ -211,7 +211,7 @@ function SharedKernel() {
   return (
     <div className="home-compat-kernel" data-motion="compat-kernel">
       <small>One Halo kernel</small>
-      <strong>openHalo foundation</strong>
+      <strong>Halo database foundation</strong>
       <ol aria-label="Shared E5 execution foundation">
         <li>Protocol</li>
         <li>Semantics</li>
@@ -417,6 +417,8 @@ function AvailabilitySection({ node }: { node: DiagramNode }) {
               <article className="home-availability-replica" data-motion="availability-replica">
                 <small>Replica</small><strong>Eligibility checked</strong><span>Role changes only after the gates pass</span>
               </article>
+            </div>
+            <div className="home-availability-status-slot">
               <aside className="home-availability-hold" data-motion="availability-hold">
                 <small>No authority or no eligible replica</small><strong>Hold · do not move</strong>
               </aside>
@@ -465,10 +467,21 @@ function RoutingSection({ node }: { node: DiagramNode }) {
                 <article><small>Local path</small><strong>Read-only node</strong><span>Read work stays local.</span></article>
                 <article><small>Forwarded path</small><strong>Read/write node</strong><span>Detected write work executes here.</span></article>
               </div>
-              <i aria-hidden="true" className="home-routing-line home-routing-line--read" data-motion="routing-read-path" />
-              <i aria-hidden="true" className="home-routing-line home-routing-line--write" data-motion="routing-write-path" />
-              <i aria-hidden="true" className="home-routing-line home-routing-line--return" data-motion="routing-return-path" />
-              <span aria-hidden="true" className="home-routing-token" data-motion="routing-token"><b>SQL</b></span>
+              <i aria-hidden="true" className="home-routing-line home-routing-line--read" data-motion="routing-read-path">
+                <span className="home-routing-line__segment home-routing-line__segment--source" data-connector-segment />
+                <span className="home-routing-line__segment home-routing-line__segment--target" data-connector-segment />
+              </i>
+              <i aria-hidden="true" className="home-routing-line home-routing-line--write" data-motion="routing-write-path">
+                <span className="home-routing-line__segment home-routing-line__segment--source" data-connector-segment />
+                <span className="home-routing-line__segment home-routing-line__segment--target" data-connector-segment />
+              </i>
+              <i aria-hidden="true" className="home-routing-line home-routing-line--return" data-motion="routing-return-path">
+                <span className="home-routing-line__segment home-routing-line__segment--source" data-connector-segment />
+                <span className="home-routing-line__segment home-routing-line__segment--target" data-connector-segment />
+              </i>
+              <span aria-hidden="true" className="home-routing-token-slot">
+                <span className="home-routing-token" data-motion="routing-token"><b>SQL</b></span>
+              </span>
             </div>
             <StoryStepSequence className="home-routing-steps" motionToken="routing" steps={ROUTING_STEPS} />
             <p className="home-routing-result"><strong>Detected write inside a transaction</strong><span>Keep that work on the read/write path for the relevant transaction context.</span></p>
@@ -513,12 +526,17 @@ function ShardingSection({ node }: { node: DiagramNode }) {
               <small>Worker</small><strong>Partition map</strong>
               <ol><li>match bound</li><li>prune unrelated</li><li>route mapped partition</li><li>push down work</li></ol>
             </div>
-            <div className="home-sharding-nodes" role="list">
-              <article data-motion="sharding-pruned" role="listitem"><small>Data node A</small><strong>Earlier range</strong><span>Pruned</span></article>
-              <article data-motion="sharding-target" role="listitem"><small>Data node B</small><strong>Middle range</strong><span>Selected</span></article>
-              <article data-motion="sharding-pruned" role="listitem"><small>Data node C</small><strong>Later range</strong><span>Pruned</span></article>
+            <div className="home-sharding-node-stage">
+              <div aria-hidden="true" className="home-sharding-route" data-motion="sharding-route">
+                <i className="home-sharding-route__trunk" data-connector-segment />
+                <i className="home-sharding-route__drop" data-connector-segment />
+              </div>
+              <div className="home-sharding-nodes" role="list">
+                <article data-motion="sharding-pruned" role="listitem"><small>Data node A</small><strong>Earlier range</strong><span>Pruned</span></article>
+                <article data-motion="sharding-target" role="listitem"><small>Data node B</small><strong>Middle range</strong><span>Selected</span></article>
+                <article data-motion="sharding-pruned" role="listitem"><small>Data node C</small><strong>Later range</strong><span>Pruned</span></article>
+              </div>
             </div>
-            <div aria-hidden="true" className="home-sharding-route" data-motion="sharding-route"><i /></div>
             <div className="home-sharding-result" data-motion="sharding-result"><small>Relevant result</small><strong>Range B → Data node B</strong></div>
             <StoryStepSequence className="home-sharding-steps" motionToken="sharding" steps={HDS_STEPS} />
             <FigureNote>The range map is illustrative. Pruning depends on predicates and partition mapping. Production evaluation must still cover worker availability, redistribution, resharding, and cross-shard transaction requirements; none is implied here.</FigureNote>

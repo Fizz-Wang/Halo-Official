@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from "react";
+import Image from "next/image";
 import type {
   ActiveSitePage,
   ContentAction,
@@ -600,6 +601,59 @@ function Block({
               <figcaption><Paragraphs paragraphs={block.caption} /></figcaption>
             ) : null}
           </figure>
+        </div>
+      </section>
+    );
+  }
+
+  if (block.type === "gallery") {
+    const headingId = `gallery-${index}-heading`;
+
+    return (
+      <section
+        aria-labelledby={headingId}
+        className="section gallery-section"
+        data-block-type={block.type}
+        data-reveal="section"
+        id={block.anchor}
+      >
+        <div className="section-inner">
+          <h2 className="section-heading" id={headingId}>
+            {renderApprovedText(block.heading)}
+          </h2>
+          {block.intro ? (
+            <div className="section-intro"><Paragraphs paragraphs={block.intro} /></div>
+          ) : null}
+          <div
+            className={`gallery gallery--${block.layout} gallery--${block.fit}`}
+            data-gallery-fit={block.fit}
+            data-gallery-layout={block.layout}
+          >
+            {block.items.map((item, itemIndex) => {
+              const media = (
+                <Image
+                  alt={item.alt}
+                  className="gallery-image"
+                  height={item.height}
+                  loading="lazy"
+                  src={item.src}
+                  unoptimized
+                  width={item.width}
+                />
+              );
+
+              return (
+                <figure className="gallery-item" key={`${item.src}-${itemIndex}`}>
+                  <div className="gallery-media">
+                    {item.href ? <a href={item.href}>{media}</a> : media}
+                  </div>
+                  {item.caption ? (
+                    <figcaption>{renderApprovedText(item.caption)}</figcaption>
+                  ) : null}
+                </figure>
+              );
+            })}
+          </div>
         </div>
       </section>
     );

@@ -57,10 +57,15 @@ export const headerItems: readonly HeaderItem[] = [
     ],
   },
   {
-    kind: "link",
+    kind: "group",
     id: "company",
     label: "Company",
     href: "/company/",
+    disclosureLabel: "Company links",
+    links: [
+      { label: "About Halo Tech", href: "/company/" },
+      { label: "openHalo", href: "/open-halo/" },
+    ],
   },
   {
     kind: "link",
@@ -72,7 +77,7 @@ export const headerItems: readonly HeaderItem[] = [
   {
     kind: "link",
     id: "request-poc",
-    label: "Prepare a PoC",
+    label: "Plan a PoC",
     href: "/request-poc/",
     presentation: "primary",
   },
@@ -116,7 +121,7 @@ export const footerGroups: readonly FooterGroup[] = [
         label: "PoC Method",
         href: "/evaluation/",
       },
-      { label: "Prepare a PoC", href: "/request-poc/" },
+      { label: "Plan a PoC", href: "/request-poc/" },
       { label: "Plan a Demo", href: "/request-demo/" },
     ],
   },
@@ -138,7 +143,7 @@ export const footerGroups: readonly FooterGroup[] = [
     links: [
       { label: "About Halo Tech", href: "/company/" },
       { label: "Product Access & Licensing", href: "/contact-sales/" },
-      { label: "openHalo (Open Source)", href: "https://www.openhalo.org/" },
+      { label: "openHalo (Open Source)", href: "/open-halo/" },
     ],
   },
 ] as const;

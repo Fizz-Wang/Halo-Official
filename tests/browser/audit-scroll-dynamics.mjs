@@ -18,7 +18,7 @@ const BOUNDARY_EVENT_TYPES = [
   "halo:story-boundary-snap",
   "halo:story-boundary-end",
 ];
-const BOUNDARY_AUDIT_MODES = ["view-transition", "fallback"];
+const BOUNDARY_AUDIT_MODES = ["view-transition", "fallback", "stalled-view-transition"];
 
 const FRAME_IDS = {
   compatibility: ["oracle", "mysql", "postgresql", "compatibility-result"],
@@ -195,9 +195,18 @@ async function beginBoundaryTrace(page) {
     window.__haloBoundaryAuditSamples = [];
     window.__haloBoundaryAuditWheelEvents = [];
     window.__haloBoundaryAuditWheelCapture = null;
+    window.__haloBoundaryAuditUnhandledRejections = [];
     window.__haloBoundaryAuditInjected = false;
     window.__haloBoundaryAuditInjectedAt = null;
     window.__haloBoundaryAuditInjectedDoneAt = null;
+    if (window.__haloStalledViewTransitionStats) {
+      Object.assign(window.__haloStalledViewTransitionStats, {
+        startCalls: 0,
+        updateCalls: 0,
+        skipCalls: 0,
+        finishedResolutions: 0,
+      });
+    }
     window.__haloBoundaryAuditTraceToken = (window.__haloBoundaryAuditTraceToken ?? 0) + 1;
     const token = window.__haloBoundaryAuditTraceToken;
     const root = document.documentElement;
@@ -235,6 +244,9 @@ async function beginBoundaryTrace(page) {
       };
     };
     if (!window.__haloBoundaryAuditListenersInstalled) {
+      window.addEventListener("unhandledrejection", (event) => {
+        window.__haloBoundaryAuditUnhandledRejections.push(String(event.reason));
+      });
       for (const type of eventTypes) {
         window.addEventListener(type, (event) => {
           const current = snapshot();
@@ -311,6 +323,10 @@ async function endBoundaryTrace(page) {
       injected: window.__haloBoundaryAuditInjected === true,
       injectedAt: window.__haloBoundaryAuditInjectedAt,
       injectedDoneAt: window.__haloBoundaryAuditInjectedDoneAt,
+      stalledViewTransition: window.__haloStalledViewTransitionStats
+        ? { ...window.__haloStalledViewTransitionStats }
+        : null,
+      unhandledRejections: window.__haloBoundaryAuditUnhandledRejections ?? [],
       root: {
         transition: root.dataset.storyBoundaryTransition ?? null,
         mode: root.dataset.storyBoundaryMode ?? null,
@@ -339,13 +355,19 @@ function appendAtomicBoundaryIssues(report, browserName, result) {
   const start = starts[0];
   const snap = snaps[0];
   const end = ends[0];
+  const stalledViewTransition = result.mode === "stalled-view-transition";
+  const expectedStartMode = stalledViewTransition ? "view-transition" : result.mode;
+  const expectedSnapMode = expectedStartMode;
+  const expectedEndMode = expectedStartMode;
   const expectedEventDirection = result.direction === "forward" ? "forward" : "backward";
   const detailMatches = [start, snap, end].every((event) => (
     event?.detail?.from === result.from
     && event?.detail?.to === result.to
     && event?.detail?.direction === expectedEventDirection
-    && event?.detail?.mode === result.mode
-  ));
+  ))
+    && start?.detail?.mode === expectedStartMode
+    && snap?.detail?.mode === expectedSnapMode
+    && end?.detail?.mode === expectedEndMode;
   const trueStartMatches = start
     && Number.isFinite(start.detail?.fromY)
     && Math.abs(start.detail.fromY - result.before.y) <= 2;
@@ -391,6 +413,27 @@ function appendAtomicBoundaryIssues(report, browserName, result) {
     && snap?.curtainRect?.right >= report.viewport.width
     && snap?.curtainRect?.bottom >= report.viewport.height
   );
+  const stalledFallbackSamples = stalledViewTransition
+    ? result.trace.samples.filter(({ boundaryMode }) => boundaryMode === "fallback")
+    : [];
+  const stalledFallbackVisible = !stalledViewTransition || stalledFallbackSamples.some((sample) => (
+    (sample.curtainOpacity ?? 0) >= 0.98
+    && sample.curtainRect?.left <= 0
+    && sample.curtainRect?.top <= 0
+    && sample.curtainRect?.right >= report.viewport.width
+    && sample.curtainRect?.bottom >= report.viewport.height
+  ));
+  const stalledStats = result.trace.stalledViewTransition;
+  const stalledLifecycleValid = !stalledViewTransition || (
+    stalledStats?.startCalls === 1
+    && stalledStats?.updateCalls === 1
+    && stalledStats?.skipCalls === 1
+    && stalledStats?.finishedResolutions === 1
+    && stalledFallbackVisible
+    && (result.trace.unhandledRejections?.length ?? 0) === 0
+    && (result.runtimeErrors?.pageErrors?.length ?? 0) === 0
+    && (result.runtimeErrors?.consoleErrors?.length ?? 0) === 0
+  );
 
   if (result.waitError || result.before.active !== "true"
     || result.fromAfter.active === "true"
@@ -409,12 +452,22 @@ function appendAtomicBoundaryIssues(report, browserName, result) {
     report.issues.push(issue("atomic-boundary-lifecycle-invalid", result.from, { browser: browserName, result }));
   }
   if (!result.trace.injected || result.trace.root.transition !== "idle"
-    || snap?.boundaryTransition !== "active" || snap?.boundaryMode !== result.mode
+    || result.trace.root.mode !== null || result.trace.root.direction !== null || result.trace.root.serial !== null
+    || snap?.boundaryTransition !== "active" || snap?.boundaryMode !== expectedSnapMode
     || snap?.boundaryDirection !== expectedEventDirection
     || String(snap?.boundarySerial ?? "") !== String(snap?.detail?.serial ?? "")
     || (result.mode === "fallback" && (snap?.curtainOpacity ?? 0) < 0.98)
     || !fallbackCurtainCoversViewport) {
     report.issues.push(issue("atomic-boundary-snap-uncovered", result.from, { browser: browserName, result }));
+  }
+  if (!stalledLifecycleValid) {
+    report.issues.push(issue("stalled-view-transition-recovery-failed", result.from, {
+      browser: browserName,
+      stalledFallbackVisible,
+      stalledStats,
+      runtimeErrors: result.runtimeErrors,
+      result,
+    }));
   }
   if (!wheelInterferenceValid) {
     report.issues.push(issue("atomic-boundary-wheel-interference-invalid", result.from, {
@@ -527,9 +580,53 @@ async function runAtomicBoundarySuite(browser, browserName, mode, report) {
         value: undefined,
       });
     });
+  } else if (mode === "stalled-view-transition") {
+    await context.addInitScript(() => {
+      const stats = {
+        startCalls: 0,
+        updateCalls: 0,
+        skipCalls: 0,
+        finishedResolutions: 0,
+      };
+      window.__haloStalledViewTransitionStats = stats;
+      Object.defineProperty(document, "startViewTransition", {
+        configurable: true,
+        value(updateCallback) {
+          stats.startCalls += 1;
+          let resolveFinished;
+          let skipped = false;
+          const updateCallbackDone = Promise.resolve().then(() => {
+            stats.updateCalls += 1;
+            return updateCallback();
+          });
+          const ready = new Promise(() => {});
+          const finished = new Promise((resolve) => { resolveFinished = resolve; });
+          return {
+            ready,
+            updateCallbackDone,
+            finished,
+            skipTransition() {
+              stats.skipCalls += 1;
+              if (skipped) return;
+              skipped = true;
+              void updateCallbackDone.then(() => {
+                stats.finishedResolutions += 1;
+                resolveFinished();
+              });
+            },
+          };
+        },
+      });
+    });
   }
   const page = await context.newPage();
   const results = [];
+  const pageErrors = [];
+  const consoleErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(String(error)));
+  page.on("console", (message) => {
+    if (message.type() === "error") consoleErrors.push(message.text());
+  });
   try {
     await gotoHomepage(page, targetUrl);
     const geometry = await homepageGeometry(page);
@@ -540,6 +637,8 @@ async function runAtomicBoundarySuite(browser, browserName, mode, report) {
         const from = direction === "forward" ? previous : next;
         const to = direction === "forward" ? next : previous;
         for (const interference of ["same", "reverse"]) {
+          const pageErrorStart = pageErrors.length;
+          const consoleErrorStart = consoleErrors.length;
           const result = await runAtomicBoundaryScenario(page, geometry, {
             mode,
             direction,
@@ -547,6 +646,10 @@ async function runAtomicBoundarySuite(browser, browserName, mode, report) {
             from,
             to,
           });
+          result.runtimeErrors = {
+            pageErrors: pageErrors.slice(pageErrorStart),
+            consoleErrors: consoleErrors.slice(consoleErrorStart),
+          };
           results.push(result);
           appendAtomicBoundaryIssues(report, browserName, result);
         }

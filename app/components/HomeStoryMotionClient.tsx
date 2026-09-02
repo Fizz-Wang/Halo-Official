@@ -89,6 +89,7 @@ const RESULT_LABELS: Readonly<Record<StoryId, string>> = {
 const WHEEL_STEP_THRESHOLD = 36;
 const WHEEL_GESTURE_QUIET_MS = 200;
 const STORY_BOUNDARY_SETTLE_MS = 120;
+const STORY_BOUNDARY_VIEW_READY_TIMEOUT_MS = 200;
 const STORY_BOUNDARY_FALLBACK_COVER_MS = 180;
 const STORY_BOUNDARY_FALLBACK_REVEAL_MS = 260;
 const FRAME_PROGRESS_EPSILON = 0.002;
@@ -579,12 +580,14 @@ export function HomeStoryMotionClient() {
         let boundaryLastWheelAt = 0;
         let boundaryFinishedAt = 0;
         let boundaryReleaseTimer = 0;
+        let boundaryReadyTimer = 0;
         let activeBoundaryState: {
           serial: number;
           from: { motionStory: StoryMotion; frameIndex: number };
           destination: { motionStory: StoryMotion; frameIndex: number };
           detail: StoryBoundaryDetail;
           snapped: boolean;
+          fallbackStarted: boolean;
           animations: Animation[];
         } | undefined;
         let gestureCommitted = false;
@@ -667,6 +670,8 @@ export function HomeStoryMotionClient() {
           gestureQuietTimer = 0;
           window.clearTimeout(boundaryReleaseTimer);
           boundaryReleaseTimer = 0;
+          window.clearTimeout(boundaryReadyTimer);
+          boundaryReadyTimer = 0;
           gestureQuiet = true;
           gestureCommitted = false;
           boundaryInputLocked = false;
@@ -758,7 +763,7 @@ export function HomeStoryMotionClient() {
           window.dispatchEvent(new CustomEvent(type, { detail: { ...detail } }));
         };
         const snapStoryBoundary = (state: NonNullable<typeof activeBoundaryState>) => {
-          if (state.serial !== transitionSerial || state.snapped) return;
+          if (state.serial !== transitionSerial || activeBoundaryState !== state || state.snapped) return;
           const targetY = frameY(state.destination.motionStory, state.destination.frameIndex);
           state.detail.toY = targetY;
           window.scrollTo(0, targetY);
@@ -768,6 +773,8 @@ export function HomeStoryMotionClient() {
           dispatchBoundaryEvent("halo:story-boundary-snap", state.detail);
         };
         const resetBoundaryVisuals = (state?: NonNullable<typeof activeBoundaryState>) => {
+          window.clearTimeout(boundaryReadyTimer);
+          boundaryReadyTimer = 0;
           state?.animations.forEach((animation) => animation.cancel());
           if (state) state.animations = [];
           boundaryCurtain.getAnimations().forEach((animation) => animation.cancel());
@@ -776,7 +783,7 @@ export function HomeStoryMotionClient() {
           boundaryCurtain.style.removeProperty("opacity");
         };
         const completeStoryBoundary = (state: NonNullable<typeof activeBoundaryState>) => {
-          if (state.serial !== transitionSerial) return;
+          if (state.serial !== transitionSerial || activeBoundaryState !== state) return;
           if (!state.snapped) snapStoryBoundary(state);
           resetBoundaryVisuals(state);
           activeViewTransition = undefined;
@@ -811,7 +818,40 @@ export function HomeStoryMotionClient() {
           dispatchBoundaryEvent("halo:story-boundary-end", state.detail);
           resetGesture();
         };
+        const revealFallbackBoundary = async (
+          state: NonNullable<typeof activeBoundaryState>,
+          direction: number,
+          incoming: HTMLElement | null,
+        ) => {
+          if (state.serial !== transitionSerial || activeBoundaryState !== state) return;
+          const incomingAnimation = incoming?.animate([
+            { opacity: 0.78, transform: `translateY(${24 * direction}px)` },
+            { opacity: 1, transform: "translateY(0)" },
+          ], {
+            duration: STORY_BOUNDARY_FALLBACK_REVEAL_MS,
+            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            fill: "forwards",
+          });
+          const revealAnimation = boundaryCurtain.animate([
+            { opacity: 1 },
+            { opacity: 0 },
+          ], {
+            duration: STORY_BOUNDARY_FALLBACK_REVEAL_MS,
+            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            fill: "forwards",
+          });
+          if (incomingAnimation) state.animations.push(incomingAnimation);
+          state.animations.push(revealAnimation);
+          try {
+            await Promise.all([revealAnimation.finished, incomingAnimation?.finished]);
+          } catch {
+            return;
+          }
+          completeStoryBoundary(state);
+        };
         const runFallbackBoundary = async (state: NonNullable<typeof activeBoundaryState>) => {
+          if (state.serial !== transitionSerial || activeBoundaryState !== state) return;
+          state.fallbackStarted = true;
           const direction = state.detail.direction === "forward" ? 1 : -1;
           const outgoing = state.from.motionStory.story.querySelector<HTMLElement>(".home-story-stage__inner");
           const incoming = state.destination.motionStory.story.querySelector<HTMLElement>(".home-story-stage__inner");
@@ -841,33 +881,34 @@ export function HomeStoryMotionClient() {
           } catch {
             return;
           }
-          if (state.serial !== transitionSerial) return;
+          if (state.serial !== transitionSerial || activeBoundaryState !== state) return;
           snapStoryBoundary(state);
           outgoingAnimation?.cancel();
-          const incomingAnimation = incoming?.animate([
-            { opacity: 0.78, transform: `translateY(${24 * direction}px)` },
-            { opacity: 1, transform: "translateY(0)" },
-          ], {
-            duration: STORY_BOUNDARY_FALLBACK_REVEAL_MS,
-            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-            fill: "forwards",
-          });
-          const revealAnimation = boundaryCurtain.animate([
-            { opacity: 1 },
-            { opacity: 0 },
-          ], {
-            duration: STORY_BOUNDARY_FALLBACK_REVEAL_MS,
-            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-            fill: "forwards",
-          });
-          if (incomingAnimation) state.animations.push(incomingAnimation);
-          state.animations.push(revealAnimation);
-          try {
-            await Promise.all([revealAnimation.finished, incomingAnimation?.finished]);
-          } catch {
+          await revealFallbackBoundary(state, direction, incoming);
+        };
+        const recoverViewTransition = (state: NonNullable<typeof activeBoundaryState>) => {
+          if (state.serial !== transitionSerial || activeBoundaryState !== state || state.fallbackStarted) return;
+          state.fallbackStarted = true;
+          window.clearTimeout(boundaryReadyTimer);
+          boundaryReadyTimer = 0;
+          root.dataset.storyBoundaryMode = "fallback";
+          const viewTransition = activeViewTransition;
+          const direction = state.detail.direction === "forward" ? 1 : -1;
+          if (state.snapped) {
+            const incoming = state.destination.motionStory.story.querySelector<HTMLElement>(".home-story-stage__inner");
+            boundaryCurtain.style.backgroundColor = getComputedStyle(
+              state.destination.motionStory.story,
+            ).backgroundColor;
+            boundaryCurtain.style.visibility = "visible";
+            boundaryCurtain.style.opacity = "1";
+            viewTransition?.skipTransition();
+            activeViewTransition = undefined;
+            void revealFallbackBoundary(state, direction, incoming);
             return;
           }
-          completeStoryBoundary(state);
+          viewTransition?.skipTransition();
+          activeViewTransition = undefined;
+          void runFallbackBoundary(state);
         };
         const transitionStoryBoundary = (
           fromIndex: number,
@@ -901,6 +942,7 @@ export function HomeStoryMotionClient() {
             destination: { motionStory: destinationStory, frameIndex: destinationFrameIndex },
             detail,
             snapped: false,
+            fallbackStarted: false,
             animations: [],
           };
           activeBoundaryState = state;
@@ -921,32 +963,51 @@ export function HomeStoryMotionClient() {
           root.dataset.storyBoundaryMode = mode;
           root.dataset.storyBoundaryDirection = direction;
           root.dataset.storyBoundarySerial = String(serial);
-          dispatchBoundaryEvent("halo:story-boundary-start", detail);
 
           if (mode === "view-transition") {
+            let startDispatched = false;
             try {
               activeViewTransition = document.startViewTransition(() => {
-                if (state.serial !== transitionSerial) return;
+                if (state.serial !== transitionSerial
+                  || activeBoundaryState !== state
+                  || state.fallbackStarted) return;
                 snapStoryBoundary(state);
               });
-              void activeViewTransition.finished
-                .then(() => completeStoryBoundary(state))
-                .catch(() => {
-                  if (state.serial !== transitionSerial) return;
-                  if (!state.snapped) {
-                    state.detail.mode = "fallback";
-                    root.dataset.storyBoundaryMode = "fallback";
-                    void runFallbackBoundary(state);
-                  } else {
-                    completeStoryBoundary(state);
-                  }
-                });
+              const viewTransition = activeViewTransition;
+              dispatchBoundaryEvent("halo:story-boundary-start", detail);
+              startDispatched = true;
+              boundaryReadyTimer = window.setTimeout(
+                () => recoverViewTransition(state),
+                STORY_BOUNDARY_VIEW_READY_TIMEOUT_MS,
+              );
+              void viewTransition.ready
+                .then(() => {
+                  if (state.serial !== transitionSerial || activeBoundaryState !== state) return;
+                  window.clearTimeout(boundaryReadyTimer);
+                  boundaryReadyTimer = 0;
+                })
+                .catch(() => recoverViewTransition(state));
+              void viewTransition.updateCallbackDone
+                .catch(() => recoverViewTransition(state));
+              void viewTransition.finished
+                .then(() => {
+                  if (!state.fallbackStarted) completeStoryBoundary(state);
+                })
+                .catch(() => recoverViewTransition(state));
               return;
             } catch {
+              activeViewTransition?.skipTransition();
+              activeViewTransition = undefined;
               state.detail.mode = "fallback";
+              state.fallbackStarted = true;
               root.dataset.storyBoundaryMode = "fallback";
+              if (!startDispatched) dispatchBoundaryEvent("halo:story-boundary-start", detail);
+              void runFallbackBoundary(state);
+              return;
             }
           }
+          state.fallbackStarted = true;
+          dispatchBoundaryEvent("halo:story-boundary-start", detail);
           void runFallbackBoundary(state);
         };
         const commitStep = (motionIndex: number, direction: number, entering = false) => {

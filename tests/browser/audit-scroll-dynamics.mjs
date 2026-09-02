@@ -13,6 +13,12 @@ const args = parseArgs();
 const targetUrl = String(args.url || "http://localhost:3106/");
 const outputRoot = path.resolve(String(args.output || "outputs/qa/scroll-dynamics"));
 const requestedBrowsers = String(args.browsers || "chrome,edge").split(",").map((value) => value.trim());
+const BOUNDARY_EVENT_TYPES = [
+  "halo:story-boundary-start",
+  "halo:story-boundary-snap",
+  "halo:story-boundary-end",
+];
+const BOUNDARY_AUDIT_MODES = ["view-transition", "fallback"];
 
 const FRAME_IDS = {
   compatibility: ["oracle", "mysql", "postgresql", "compatibility-result"],
@@ -181,6 +187,375 @@ async function assertStableHold(page, storyId) {
     && sample.transitioning === "false"
   ));
   return { stable, samples };
+}
+
+async function beginBoundaryTrace(page) {
+  await page.evaluate((eventTypes) => {
+    window.__haloBoundaryAuditEvents = [];
+    window.__haloBoundaryAuditSamples = [];
+    window.__haloBoundaryAuditWheelEvents = [];
+    window.__haloBoundaryAuditWheelCapture = null;
+    window.__haloBoundaryAuditInjected = false;
+    window.__haloBoundaryAuditInjectedAt = null;
+    window.__haloBoundaryAuditInjectedDoneAt = null;
+    window.__haloBoundaryAuditTraceToken = (window.__haloBoundaryAuditTraceToken ?? 0) + 1;
+    const token = window.__haloBoundaryAuditTraceToken;
+    const root = document.documentElement;
+    const snapshot = () => {
+      const storyStates = Object.fromEntries(Array.from(document.querySelectorAll("[data-scroll-story]")).map((story) => [
+        story.getAttribute("data-scroll-story"),
+        {
+          active: story.getAttribute("data-active"),
+          transitioning: story.getAttribute("data-story-transitioning"),
+          frameIndex: Number(story.getAttribute("data-story-frame-index")),
+          frameId: story.getAttribute("data-story-frame-id"),
+        },
+      ]));
+      const centerStory = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2)
+        ?.closest?.("[data-scroll-story]")?.getAttribute("data-scroll-story") ?? null;
+      const curtain = document.querySelector(".home-story-boundary-curtain");
+      const curtainStyle = curtain ? getComputedStyle(curtain) : null;
+      const curtainRect = curtain?.getBoundingClientRect();
+      return {
+        at: Number(performance.now().toFixed(2)),
+        y: Number(window.scrollY.toFixed(2)),
+        boundaryTransition: root.dataset.storyBoundaryTransition ?? null,
+        boundaryMode: root.dataset.storyBoundaryMode ?? null,
+        boundaryDirection: root.dataset.storyBoundaryDirection ?? null,
+        boundarySerial: root.dataset.storyBoundarySerial ?? null,
+        curtainOpacity: curtainStyle ? Number(curtainStyle.opacity) : null,
+        curtainRect: curtainRect ? {
+          left: Number(curtainRect.left.toFixed(2)),
+          top: Number(curtainRect.top.toFixed(2)),
+          right: Number(curtainRect.right.toFixed(2)),
+          bottom: Number(curtainRect.bottom.toFixed(2)),
+        } : null,
+        centerStory,
+        storyStates,
+      };
+    };
+    if (!window.__haloBoundaryAuditListenersInstalled) {
+      for (const type of eventTypes) {
+        window.addEventListener(type, (event) => {
+          const current = snapshot();
+          window.__haloBoundaryAuditEvents.push({
+            type,
+            ...current,
+            detail: event.detail ? { ...event.detail } : null,
+          });
+        }, { capture: true });
+      }
+      window.addEventListener("wheel", (event) => {
+        const capture = window.__haloBoundaryAuditWheelCapture;
+        if (!capture?.active) return;
+        const sample = {
+          at: Number(performance.now().toFixed(2)),
+          deltaY: event.deltaY,
+          deltaMode: event.deltaMode,
+          isTrusted: event.isTrusted,
+          cancelable: event.cancelable,
+          defaultPrevented: event.defaultPrevented,
+        };
+        window.__haloBoundaryAuditWheelEvents.push(sample);
+        capture.seen += 1;
+        if (capture.seen === 1) window.__haloBoundaryAuditInjectedAt = sample.at;
+        if (capture.seen >= capture.expected) {
+          capture.active = false;
+          window.__haloBoundaryAuditInjected = true;
+          window.__haloBoundaryAuditInjectedDoneAt = sample.at;
+        }
+      }, { capture: true });
+      window.__haloBoundaryAuditListenersInstalled = true;
+    }
+    const sample = () => {
+      if (window.__haloBoundaryAuditTraceToken !== token) return;
+      window.__haloBoundaryAuditSamples.push(snapshot());
+      window.requestAnimationFrame(sample);
+    };
+    sample();
+  }, BOUNDARY_EVENT_TYPES);
+}
+
+async function sendBoundaryInterference(page, deltas) {
+  await page.waitForFunction(() => (
+    (window.__haloBoundaryAuditEvents ?? [])
+      .some(({ type }) => type === "halo:story-boundary-start")
+  ), undefined, { timeout: 2_000 });
+  await page.waitForFunction((delayMs) => {
+    const start = (window.__haloBoundaryAuditEvents ?? [])
+      .find(({ type }) => type === "halo:story-boundary-start");
+    return start && performance.now() >= start.at + delayMs;
+  }, 240, { timeout: 2_000 });
+  await page.evaluate((expectedDeltas) => {
+    window.__haloBoundaryAuditWheelCapture = {
+      active: true,
+      expected: expectedDeltas.length,
+      seen: 0,
+    };
+  }, deltas);
+  for (let index = 0; index < deltas.length; index += 1) {
+    await page.mouse.wheel(0, deltas[index]);
+    if (index < deltas.length - 1) await page.waitForTimeout(16);
+  }
+  await page.waitForFunction(() => window.__haloBoundaryAuditInjected === true, undefined, { timeout: 1_000 });
+}
+
+async function endBoundaryTrace(page) {
+  return page.evaluate(() => {
+    window.__haloBoundaryAuditTraceToken = (window.__haloBoundaryAuditTraceToken ?? 0) + 1;
+    const root = document.documentElement;
+    return {
+      events: window.__haloBoundaryAuditEvents ?? [],
+      samples: window.__haloBoundaryAuditSamples ?? [],
+      wheelEvents: window.__haloBoundaryAuditWheelEvents ?? [],
+      injected: window.__haloBoundaryAuditInjected === true,
+      injectedAt: window.__haloBoundaryAuditInjectedAt,
+      injectedDoneAt: window.__haloBoundaryAuditInjectedDoneAt,
+      root: {
+        transition: root.dataset.storyBoundaryTransition ?? null,
+        mode: root.dataset.storyBoundaryMode ?? null,
+        direction: root.dataset.storyBoundaryDirection ?? null,
+        serial: root.dataset.storyBoundarySerial ?? null,
+      },
+    };
+  });
+}
+
+function appendAtomicBoundaryIssues(report, browserName, result) {
+  const expectedFrameIndex = result.direction === "forward"
+    ? 0
+    : FRAME_IDS[result.to].length - 1;
+  const expectedFrameId = FRAME_IDS[result.to][expectedFrameIndex];
+  const expectedUnlockIndex = result.direction === "forward"
+    ? 1
+    : expectedFrameIndex - 1;
+  const expectedUnlockFrameId = FRAME_IDS[result.to][expectedUnlockIndex];
+  const events = result.trace.events;
+  const starts = events.filter(({ type }) => type === "halo:story-boundary-start");
+  const snaps = events.filter(({ type }) => type === "halo:story-boundary-snap");
+  const ends = events.filter(({ type }) => type === "halo:story-boundary-end");
+  const lifecycle = events.map(({ type }) => type);
+  const serials = new Set(events.map(({ detail }) => String(detail?.serial ?? "")));
+  const start = starts[0];
+  const snap = snaps[0];
+  const end = ends[0];
+  const expectedEventDirection = result.direction === "forward" ? "forward" : "backward";
+  const detailMatches = [start, snap, end].every((event) => (
+    event?.detail?.from === result.from
+    && event?.detail?.to === result.to
+    && event?.detail?.direction === expectedEventDirection
+    && event?.detail?.mode === result.mode
+  ));
+  const trueStartMatches = start
+    && Number.isFinite(start.detail?.fromY)
+    && Math.abs(start.detail.fromY - result.before.y) <= 2;
+  const trueEndMatches = end
+    && Number.isFinite(end.detail?.toY)
+    && Math.abs(end.detail.toY - result.settled.y) <= 2;
+  const snapCorrection = snap && end
+    ? Math.max(Math.abs(snap.y - end.y), Math.abs(snap.y - result.settled.y))
+    : Number.POSITIVE_INFINITY;
+  const uncoveredMovement = result.trace.samples.slice(1).some((sample, index) => {
+    const previous = result.trace.samples[index];
+    if (Math.abs(sample.y - previous.y) <= 2) return false;
+    return previous.boundaryTransition !== "active" && sample.boundaryTransition !== "active";
+  });
+  const centerSequence = result.trace.samples
+    .map(({ centerStory }) => centerStory)
+    .filter((storyId) => storyId === result.from || storyId === result.to)
+    .filter((storyId, index, values) => index === 0 || storyId !== values[index - 1]);
+  const centerReversed = centerSequence.some((storyId, index) => (
+    index > 0 && storyId === result.from && centerSequence[index - 1] === result.to
+  ));
+  const durationMs = start && end ? Number((end.at - start.at).toFixed(2)) : null;
+  const injectionOffsetMs = start && Number.isFinite(result.trace.injectedAt)
+    ? Number((result.trace.injectedAt - start.at).toFixed(2))
+    : null;
+  const boundarySign = result.direction === "forward" ? 1 : -1;
+  const interferenceSign = boundarySign * (result.interference === "same" ? 1 : -1);
+  const expectedWheelDeltas = [12, 18, 24].map((delta) => delta * interferenceSign);
+  const wheelEvents = result.trace.wheelEvents ?? [];
+  const wheelGaps = wheelEvents.slice(1).map((event, index) => event.at - wheelEvents[index].at);
+  const wheelInterferenceValid = wheelEvents.length === expectedWheelDeltas.length
+    && wheelEvents.every((event, index) => (
+      event.deltaY === expectedWheelDeltas[index]
+      && event.deltaMode === 0
+      && event.isTrusted === true
+      && event.cancelable === true
+      && event.defaultPrevented === true
+    ))
+    && wheelGaps.every((gap) => gap >= 10 && gap <= 80);
+  const fallbackCurtainCoversViewport = result.mode !== "fallback" || (
+    snap?.curtainRect?.left <= 0
+    && snap?.curtainRect?.top <= 0
+    && snap?.curtainRect?.right >= report.viewport.width
+    && snap?.curtainRect?.bottom >= report.viewport.height
+  );
+
+  if (result.waitError || result.before.active !== "true"
+    || result.fromAfter.active === "true"
+    || result.settled.active !== "true" || result.settled.frameIndex !== expectedFrameIndex
+    || result.settled.frameId !== expectedFrameId || result.settled.stopError > 2
+    || !result.hold.stable) {
+    report.issues.push(issue("atomic-boundary-target-failed", result.from, { browser: browserName, result }));
+  }
+  if (lifecycle.length !== 3
+    || lifecycle.some((type, index) => type !== BOUNDARY_EVENT_TYPES[index])
+    || starts.length !== 1 || snaps.length !== 1 || ends.length !== 1 || serials.size !== 1
+    || !detailMatches || !trueStartMatches || !trueEndMatches
+    || durationMs === null || durationMs < 400 || durationMs > 700
+    || injectionOffsetMs === null || injectionOffsetMs < 220 || injectionOffsetMs > 300
+    || result.trace.injectedDoneAt > end?.at) {
+    report.issues.push(issue("atomic-boundary-lifecycle-invalid", result.from, { browser: browserName, result }));
+  }
+  if (!result.trace.injected || result.trace.root.transition !== "idle"
+    || snap?.boundaryTransition !== "active" || snap?.boundaryMode !== result.mode
+    || snap?.boundaryDirection !== expectedEventDirection
+    || String(snap?.boundarySerial ?? "") !== String(snap?.detail?.serial ?? "")
+    || (result.mode === "fallback" && (snap?.curtainOpacity ?? 0) < 0.98)
+    || !fallbackCurtainCoversViewport) {
+    report.issues.push(issue("atomic-boundary-snap-uncovered", result.from, { browser: browserName, result }));
+  }
+  if (!wheelInterferenceValid) {
+    report.issues.push(issue("atomic-boundary-wheel-interference-invalid", result.from, {
+      browser: browserName,
+      expectedWheelDeltas,
+      wheelGaps,
+      result,
+    }));
+  }
+  if (snapCorrection > 2 || uncoveredMovement || centerReversed) {
+    report.issues.push(issue("atomic-boundary-visual-sequence-invalid", result.from, {
+      browser: browserName,
+      snapCorrection,
+      uncoveredMovement,
+      centerSequence,
+      result,
+    }));
+  }
+  if (result.unlockWaitError || result.unlock.frameIndex !== expectedUnlockIndex
+    || result.unlock.frameId !== expectedUnlockFrameId || result.unlock.stopError > 2) {
+    report.issues.push(issue("atomic-boundary-did-not-unlock", result.to, { browser: browserName, result }));
+  }
+}
+
+async function runAtomicBoundaryScenario(
+  page,
+  geometry,
+  { mode, direction, interference, from, to },
+) {
+  const fromGeometry = geometry.stories.find(({ id }) => id === from);
+  if (!fromGeometry) {
+    return {
+      mode,
+      direction,
+      interference,
+      from,
+      to,
+      waitError: `Missing source geometry for ${from}`,
+      before: {},
+      settled: {},
+      hold: { stable: false, samples: [] },
+      trace: { events: [], samples: [], wheelEvents: [], injected: false, root: {} },
+      unlock: {},
+      unlockWaitError: "Scenario was not run",
+    };
+  }
+  const sourceFrameIndex = direction === "forward" ? FRAME_IDS[from].length - 1 : 0;
+  const targetFrameIndex = direction === "forward" ? 0 : FRAME_IDS[to].length - 1;
+  const unlockFrameIndex = direction === "forward" ? 1 : targetFrameIndex - 1;
+  const wheelSign = direction === "forward" ? 1 : -1;
+  await setScroll(page, fromGeometry.top + 1);
+  await jumpToFrame(page, from, sourceFrameIndex);
+  await page.waitForTimeout(250);
+  const before = await readStoryState(page, from);
+  const targetBefore = await readStoryState(page, to);
+  await beginBoundaryTrace(page);
+  await page.mouse.move(720, 450);
+  await page.mouse.wheel(0, wheelSign * 72);
+  const interferenceSign = wheelSign * (interference === "same" ? 1 : -1);
+  await sendBoundaryInterference(page, [12, 18, 24].map((delta) => delta * interferenceSign));
+  let waitError = null;
+  let settled;
+  try {
+    await page.waitForFunction(() => (
+      (window.__haloBoundaryAuditEvents ?? [])
+        .filter(({ type }) => type === "halo:story-boundary-end").length >= 1
+      && window.__haloBoundaryAuditInjected === true
+    ), undefined, { timeout: 5_000 });
+    settled = await waitForFrame(page, to, targetFrameIndex, 5_000);
+  } catch (error) {
+    waitError = String(error);
+    settled = await readStoryState(page, to);
+  }
+  const hold = await assertStableHold(page, to);
+  const fromAfter = await readStoryState(page, from);
+  const trace = await endBoundaryTrace(page);
+  await sendTouchpadGesture(page, [12 * wheelSign, 18 * wheelSign, 24 * wheelSign]);
+  let unlockWaitError = null;
+  let unlock;
+  try {
+    unlock = await waitForFrame(page, to, unlockFrameIndex, 4_000);
+  } catch (error) {
+    unlockWaitError = String(error);
+    unlock = await readStoryState(page, to);
+  }
+  return {
+    mode,
+    direction,
+    interference,
+    from,
+    to,
+    before,
+    targetBefore,
+    settled,
+    fromAfter,
+    hold,
+    trace,
+    waitError,
+    unlock,
+    unlockWaitError,
+  };
+}
+
+async function runAtomicBoundarySuite(browser, browserName, mode, report) {
+  const context = await browser.newContext({ viewport: report.viewport });
+  if (mode === "fallback") {
+    await context.addInitScript(() => {
+      Object.defineProperty(document, "startViewTransition", {
+        configurable: true,
+        value: undefined,
+      });
+    });
+  }
+  const page = await context.newPage();
+  const results = [];
+  try {
+    await gotoHomepage(page, targetUrl);
+    const geometry = await homepageGeometry(page);
+    for (let index = 0; index < geometry.stories.length - 1; index += 1) {
+      const previous = geometry.stories[index].id;
+      const next = geometry.stories[index + 1].id;
+      for (const direction of ["forward", "backward"]) {
+        const from = direction === "forward" ? previous : next;
+        const to = direction === "forward" ? next : previous;
+        for (const interference of ["same", "reverse"]) {
+          const result = await runAtomicBoundaryScenario(page, geometry, {
+            mode,
+            direction,
+            interference,
+            from,
+            to,
+          });
+          results.push(result);
+          appendAtomicBoundaryIssues(report, browserName, result);
+        }
+      }
+    }
+  } finally {
+    await context.close();
+  }
+  return results;
 }
 
 async function auditFrameCompletion(page, storyId, frameId) {
@@ -643,6 +1018,7 @@ for (const browserName of requestedBrowsers) {
       storyScrollReady: geometry.storyScrollReady,
       stories: [],
       boundaries: [],
+      atomicBoundaries: {},
       exceptions: {},
     };
 
@@ -794,6 +1170,8 @@ for (const browserName of requestedBrowsers) {
 
       const nextStory = geometry.stories[storyIndex + 1];
       if (nextStory) {
+        const oldState = await readStoryState(page, story.id);
+        const nextStateBefore = await readStoryState(page, nextStory.id);
         await sendWheelBurst(page, 72);
         let nextState;
         let waitError = null;
@@ -805,8 +1183,18 @@ for (const browserName of requestedBrowsers) {
         }
         const nextVisual = await auditFrameCompletion(page, nextStory.id, FRAME_IDS[nextStory.id][0]);
         const nextLayout = await auditStepDetailLayout(page, nextStory.id);
-        const oldState = await readStoryState(page, story.id);
-        const boundary = { from: story.id, to: nextStory.id, oldState, nextState, nextVisual, nextLayout, waitError };
+        const oldStateAfter = await readStoryState(page, story.id);
+        const boundary = {
+          from: story.id,
+          to: nextStory.id,
+          oldState,
+          oldStateAfter,
+          nextStateBefore,
+          nextState,
+          nextVisual,
+          nextLayout,
+          waitError,
+        };
         browserResult.boundaries.push(boundary);
         for (const layoutIssue of nextLayout.issues) {
           report.issues.push(issue(layoutIssue.code, nextStory.id, {
@@ -815,7 +1203,9 @@ for (const browserName of requestedBrowsers) {
             ...layoutIssue,
           }));
         }
-        if (waitError || !nextVisual.complete || oldState.active === "true" || nextState.active !== "true"
+        if (waitError || !nextVisual.complete || oldState.active !== "true"
+          || oldState.frameId !== FRAME_IDS[story.id].at(-1) || oldState.stopError > 2
+          || oldStateAfter.active === "true" || nextState.active !== "true"
           || nextState.frameId !== FRAME_IDS[nextStory.id][0] || nextState.stopError > 2) {
           report.issues.push(issue("next-story-first-frame-failed", story.id, { browser: browserName, boundary }));
         }
@@ -845,6 +1235,10 @@ for (const browserName of requestedBrowsers) {
 
     report.browsers.push(browserResult);
     await context.close();
+
+    for (const mode of BOUNDARY_AUDIT_MODES) {
+      browserResult.atomicBoundaries[mode] = await runAtomicBoundarySuite(browser, browserName, mode, report);
+    }
 
     const fallbackContext = await browser.newContext({ viewport: { width: 1440, height: 760 } });
     const fallbackPage = await fallbackContext.newPage();

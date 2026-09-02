@@ -31,6 +31,19 @@ interface StoredStoryFrame {
   frameIndex: number;
 }
 
+type StoryBoundaryDirection = "forward" | "backward";
+type StoryBoundaryMode = "view-transition" | "fallback";
+
+interface StoryBoundaryDetail {
+  serial: number;
+  from: StoryId;
+  to: StoryId;
+  direction: StoryBoundaryDirection;
+  mode: StoryBoundaryMode;
+  fromY: number;
+  toY: number;
+}
+
 const STORY_IDS: readonly StoryId[] = [
   "compatibility",
   "migration",
@@ -75,6 +88,9 @@ const RESULT_LABELS: Readonly<Record<StoryId, string>> = {
 
 const WHEEL_STEP_THRESHOLD = 36;
 const WHEEL_GESTURE_QUIET_MS = 200;
+const STORY_BOUNDARY_SETTLE_MS = 120;
+const STORY_BOUNDARY_FALLBACK_COVER_MS = 180;
+const STORY_BOUNDARY_FALLBACK_REVEAL_MS = 260;
 const FRAME_PROGRESS_EPSILON = 0.002;
 const STORY_FRAME_RESTORE_KEY = "halo:home-story-frame";
 
@@ -448,6 +464,10 @@ export function HomeStoryMotionClient() {
             story?.removeAttribute("data-story-stop-y");
             story?.removeAttribute("data-story-transitioning");
           });
+          delete root.dataset.storyBoundaryTransition;
+          delete root.dataset.storyBoundaryMode;
+          delete root.dataset.storyBoundaryDirection;
+          delete root.dataset.storyBoundarySerial;
           root.classList.remove("story-scroll-ready");
         };
         const emergencyCleanup = () => {
@@ -461,6 +481,12 @@ export function HomeStoryMotionClient() {
         };
         stop = emergencyCleanup;
         root.classList.add("story-scroll-ready");
+        root.dataset.storyBoundaryTransition = "idle";
+        const boundaryCurtain = document.createElement("div");
+        boundaryCurtain.className = "home-story-boundary-curtain";
+        boundaryCurtain.setAttribute("aria-hidden", "true");
+        document.body.append(boundaryCurtain);
+        actionCleanups.push(() => boundaryCurtain.remove());
         contextRef.current = gsap.context(() => {
           STORY_IDS.forEach((id, index) => {
             const story = stories[index];
@@ -544,9 +570,23 @@ export function HomeStoryMotionClient() {
         let scrollTween: GSAPTween | undefined;
         let transitionSerial = 0;
         let transitionActive = false;
+        let transitionKind: "frame" | "boundary" | undefined;
         let activeDestination: { motionStory: StoryMotion; frameIndex: number } | undefined;
         let activeBoundaryTarget: (() => number) | undefined;
         let activeTransitionStories: readonly StoryMotion[] = [];
+        let activeViewTransition: ViewTransition | undefined;
+        let boundaryInputLocked = false;
+        let boundaryLastWheelAt = 0;
+        let boundaryFinishedAt = 0;
+        let boundaryReleaseTimer = 0;
+        let activeBoundaryState: {
+          serial: number;
+          from: { motionStory: StoryMotion; frameIndex: number };
+          destination: { motionStory: StoryMotion; frameIndex: number };
+          detail: StoryBoundaryDetail;
+          snapped: boolean;
+          animations: Animation[];
+        } | undefined;
         let gestureCommitted = false;
         let gestureQuiet = true;
         let gestureQuietTimer = 0;
@@ -560,6 +600,12 @@ export function HomeStoryMotionClient() {
         let internalScrollElement: HTMLElement | null = null;
         let internalScrollTimer = 0;
 
+        const markBoundaryIdle = () => {
+          root.dataset.storyBoundaryTransition = "idle";
+          delete root.dataset.storyBoundaryMode;
+          delete root.dataset.storyBoundaryDirection;
+          delete root.dataset.storyBoundarySerial;
+        };
         const clearTransitionMarkers = () => {
           motionStories.forEach(({ story }) => { story.dataset.storyTransitioning = "false"; });
         };
@@ -577,10 +623,34 @@ export function HomeStoryMotionClient() {
           queuedWheelDirection = 0;
         };
         const maybeReleaseGesture = () => {
-          if (!gestureQuiet || transitionActive || queuedStepDirection || queuedStepFrame) return;
+          if (!gestureQuiet || transitionActive || boundaryInputLocked || queuedStepDirection || queuedStepFrame) return;
           gestureCommitted = false;
           wheelAccumulator = 0;
           wheelDirection = 0;
+        };
+        const scheduleBoundaryRelease = () => {
+          window.clearTimeout(boundaryReleaseTimer);
+          boundaryReleaseTimer = 0;
+          if (!boundaryInputLocked || !boundaryFinishedAt) return;
+          const now = performance.now();
+          const quietRemaining = Math.max(0, (boundaryLastWheelAt + WHEEL_GESTURE_QUIET_MS) - now);
+          const settleRemaining = Math.max(0, (boundaryFinishedAt + STORY_BOUNDARY_SETTLE_MS) - now);
+          const remaining = Math.ceil(Math.max(quietRemaining, settleRemaining));
+          if (remaining > 0) {
+            boundaryReleaseTimer = window.setTimeout(scheduleBoundaryRelease, remaining);
+            return;
+          }
+          boundaryInputLocked = false;
+          boundaryLastWheelAt = 0;
+          boundaryFinishedAt = 0;
+          window.clearTimeout(gestureQuietTimer);
+          gestureQuietTimer = 0;
+          gestureQuiet = true;
+          maybeReleaseGesture();
+        };
+        const noteBoundaryWheel = () => {
+          boundaryLastWheelAt = performance.now();
+          if (boundaryFinishedAt) scheduleBoundaryRelease();
         };
         const scheduleGestureQuiet = () => {
           gestureQuiet = false;
@@ -595,8 +665,13 @@ export function HomeStoryMotionClient() {
         const resetGesture = () => {
           window.clearTimeout(gestureQuietTimer);
           gestureQuietTimer = 0;
+          window.clearTimeout(boundaryReleaseTimer);
+          boundaryReleaseTimer = 0;
           gestureQuiet = true;
           gestureCommitted = false;
+          boundaryInputLocked = false;
+          boundaryLastWheelAt = 0;
+          boundaryFinishedAt = 0;
           wheelAccumulator = 0;
           wheelDirection = 0;
           resetQueuedGesture();
@@ -626,6 +701,7 @@ export function HomeStoryMotionClient() {
           const scrollState = { y: window.scrollY };
           const distance = Math.abs(clampedTarget - scrollState.y);
           transitionActive = true;
+          transitionKind = "frame";
           activeDestination = destination;
           activeBoundaryTarget = destination ? undefined : boundaryTarget;
           activeTransitionStories = transitionStories;
@@ -641,6 +717,7 @@ export function HomeStoryMotionClient() {
             if (destination) setFrameMetadata(destination.motionStory, destination.frameIndex);
             scrollTween = undefined;
             transitionActive = false;
+            transitionKind = undefined;
             activeDestination = undefined;
             activeBoundaryTarget = undefined;
             activeTransitionStories = [];
@@ -674,6 +751,204 @@ export function HomeStoryMotionClient() {
             transitionStories.filter(Boolean),
           );
         };
+        const dispatchBoundaryEvent = (
+          type: "halo:story-boundary-start" | "halo:story-boundary-snap" | "halo:story-boundary-end",
+          detail: StoryBoundaryDetail,
+        ) => {
+          window.dispatchEvent(new CustomEvent(type, { detail: { ...detail } }));
+        };
+        const snapStoryBoundary = (state: NonNullable<typeof activeBoundaryState>) => {
+          if (state.serial !== transitionSerial || state.snapped) return;
+          const targetY = frameY(state.destination.motionStory, state.destination.frameIndex);
+          state.detail.toY = targetY;
+          window.scrollTo(0, targetY);
+          ScrollTrigger.update();
+          setFrameMetadata(state.destination.motionStory, state.destination.frameIndex);
+          state.snapped = true;
+          dispatchBoundaryEvent("halo:story-boundary-snap", state.detail);
+        };
+        const resetBoundaryVisuals = (state?: NonNullable<typeof activeBoundaryState>) => {
+          state?.animations.forEach((animation) => animation.cancel());
+          if (state) state.animations = [];
+          boundaryCurtain.getAnimations().forEach((animation) => animation.cancel());
+          boundaryCurtain.style.removeProperty("background-color");
+          boundaryCurtain.style.removeProperty("visibility");
+          boundaryCurtain.style.removeProperty("opacity");
+        };
+        const completeStoryBoundary = (state: NonNullable<typeof activeBoundaryState>) => {
+          if (state.serial !== transitionSerial) return;
+          if (!state.snapped) snapStoryBoundary(state);
+          resetBoundaryVisuals(state);
+          activeViewTransition = undefined;
+          activeBoundaryState = undefined;
+          transitionActive = false;
+          transitionKind = undefined;
+          activeDestination = undefined;
+          activeBoundaryTarget = undefined;
+          activeTransitionStories = [];
+          clearTransitionMarkers();
+          markBoundaryIdle();
+          dispatchBoundaryEvent("halo:story-boundary-end", state.detail);
+          boundaryFinishedAt = performance.now();
+          scheduleBoundaryRelease();
+        };
+        const cancelStoryBoundary = (settle = true) => {
+          const state = activeBoundaryState;
+          if (!state) return;
+          activeViewTransition?.skipTransition();
+          if (settle && !state.snapped) snapStoryBoundary(state);
+          resetBoundaryVisuals(state);
+          transitionSerial += 1;
+          activeViewTransition = undefined;
+          activeBoundaryState = undefined;
+          transitionActive = false;
+          transitionKind = undefined;
+          activeDestination = undefined;
+          activeBoundaryTarget = undefined;
+          activeTransitionStories = [];
+          clearTransitionMarkers();
+          markBoundaryIdle();
+          dispatchBoundaryEvent("halo:story-boundary-end", state.detail);
+          resetGesture();
+        };
+        const runFallbackBoundary = async (state: NonNullable<typeof activeBoundaryState>) => {
+          const direction = state.detail.direction === "forward" ? 1 : -1;
+          const outgoing = state.from.motionStory.story.querySelector<HTMLElement>(".home-story-stage__inner");
+          const incoming = state.destination.motionStory.story.querySelector<HTMLElement>(".home-story-stage__inner");
+          const destinationColor = getComputedStyle(state.destination.motionStory.story).backgroundColor;
+          boundaryCurtain.style.backgroundColor = destinationColor;
+          boundaryCurtain.style.visibility = "visible";
+          const outgoingAnimation = outgoing?.animate([
+            { opacity: 1, transform: "translateY(0)" },
+            { opacity: 0.82, transform: `translateY(${-24 * direction}px)` },
+          ], {
+            duration: STORY_BOUNDARY_FALLBACK_COVER_MS,
+            easing: "cubic-bezier(0.4, 0, 1, 1)",
+            fill: "forwards",
+          });
+          const coverAnimation = boundaryCurtain.animate([
+            { opacity: 0 },
+            { opacity: 1 },
+          ], {
+            duration: STORY_BOUNDARY_FALLBACK_COVER_MS,
+            easing: "cubic-bezier(0.4, 0, 1, 1)",
+            fill: "forwards",
+          });
+          if (outgoingAnimation) state.animations.push(outgoingAnimation);
+          state.animations.push(coverAnimation);
+          try {
+            await coverAnimation.finished;
+          } catch {
+            return;
+          }
+          if (state.serial !== transitionSerial) return;
+          snapStoryBoundary(state);
+          outgoingAnimation?.cancel();
+          const incomingAnimation = incoming?.animate([
+            { opacity: 0.78, transform: `translateY(${24 * direction}px)` },
+            { opacity: 1, transform: "translateY(0)" },
+          ], {
+            duration: STORY_BOUNDARY_FALLBACK_REVEAL_MS,
+            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            fill: "forwards",
+          });
+          const revealAnimation = boundaryCurtain.animate([
+            { opacity: 1 },
+            { opacity: 0 },
+          ], {
+            duration: STORY_BOUNDARY_FALLBACK_REVEAL_MS,
+            easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+            fill: "forwards",
+          });
+          if (incomingAnimation) state.animations.push(incomingAnimation);
+          state.animations.push(revealAnimation);
+          try {
+            await Promise.all([revealAnimation.finished, incomingAnimation?.finished]);
+          } catch {
+            return;
+          }
+          completeStoryBoundary(state);
+        };
+        const transitionStoryBoundary = (
+          fromIndex: number,
+          destinationIndex: number,
+          destinationFrameIndex: number,
+          direction: StoryBoundaryDirection,
+        ) => {
+          const fromStory = motionStories[fromIndex];
+          const destinationStory = motionStories[destinationIndex];
+          if (!fromStory || !destinationStory || !destinationStory.frames[destinationFrameIndex]) return;
+          scrollTween?.kill();
+          scrollTween = undefined;
+          resetQueuedGesture();
+          const serial = ++transitionSerial;
+          const mode: StoryBoundaryMode = typeof document.startViewTransition === "function"
+            ? "view-transition"
+            : "fallback";
+          const fromFrameIndex = direction === "forward" ? fromStory.frames.length - 1 : 0;
+          const detail: StoryBoundaryDetail = {
+            serial,
+            from: fromStory.id,
+            to: destinationStory.id,
+            direction,
+            mode,
+            fromY: Number(window.scrollY.toFixed(2)),
+            toY: frameY(destinationStory, destinationFrameIndex),
+          };
+          const state: NonNullable<typeof activeBoundaryState> = {
+            serial,
+            from: { motionStory: fromStory, frameIndex: fromFrameIndex },
+            destination: { motionStory: destinationStory, frameIndex: destinationFrameIndex },
+            detail,
+            snapped: false,
+            animations: [],
+          };
+          activeBoundaryState = state;
+          transitionActive = true;
+          transitionKind = "boundary";
+          activeDestination = state.destination;
+          activeBoundaryTarget = undefined;
+          activeTransitionStories = [fromStory, destinationStory];
+          clearTransitionMarkers();
+          activeTransitionStories.forEach(({ story }) => { story.dataset.storyTransitioning = "true"; });
+          gestureCommitted = true;
+          boundaryInputLocked = true;
+          boundaryLastWheelAt = performance.now();
+          boundaryFinishedAt = 0;
+          window.clearTimeout(boundaryReleaseTimer);
+          boundaryReleaseTimer = 0;
+          root.dataset.storyBoundaryTransition = "active";
+          root.dataset.storyBoundaryMode = mode;
+          root.dataset.storyBoundaryDirection = direction;
+          root.dataset.storyBoundarySerial = String(serial);
+          dispatchBoundaryEvent("halo:story-boundary-start", detail);
+
+          if (mode === "view-transition") {
+            try {
+              activeViewTransition = document.startViewTransition(() => {
+                if (state.serial !== transitionSerial) return;
+                snapStoryBoundary(state);
+              });
+              void activeViewTransition.finished
+                .then(() => completeStoryBoundary(state))
+                .catch(() => {
+                  if (state.serial !== transitionSerial) return;
+                  if (!state.snapped) {
+                    state.detail.mode = "fallback";
+                    root.dataset.storyBoundaryMode = "fallback";
+                    void runFallbackBoundary(state);
+                  } else {
+                    completeStoryBoundary(state);
+                  }
+                });
+              return;
+            } catch {
+              state.detail.mode = "fallback";
+              root.dataset.storyBoundaryMode = "fallback";
+            }
+          }
+          void runFallbackBoundary(state);
+        };
         const commitStep = (motionIndex: number, direction: number, entering = false) => {
           const motionStory = motionStories[motionIndex];
           if (!motionStory) return;
@@ -693,7 +968,7 @@ export function HomeStoryMotionClient() {
             }
             const nextStory = motionStories[motionIndex + 1];
             if (nextStory) {
-              goToFrame(motionIndex + 1, 0, [motionStory, nextStory]);
+              transitionStoryBoundary(motionIndex, motionIndex + 1, 0, "forward");
               return;
             }
             const boundaryTarget = () => (
@@ -717,7 +992,12 @@ export function HomeStoryMotionClient() {
           }
           const previousStory = motionStories[motionIndex - 1];
           if (previousStory) {
-            goToFrame(motionIndex - 1, previousStory.frames.length - 1, [motionStory, previousStory]);
+            transitionStoryBoundary(
+              motionIndex,
+              motionIndex - 1,
+              previousStory.frames.length - 1,
+              "backward",
+            );
             return;
           }
           const boundaryTarget = () => (
@@ -784,6 +1064,11 @@ export function HomeStoryMotionClient() {
           const delta = normalizedWheelDelta(event);
           if (Math.abs(delta.x) > Math.abs(delta.y) || Math.abs(delta.y) < 0.5) return;
           const consume = () => { if (event.cancelable) event.preventDefault(); };
+          if (boundaryInputLocked || transitionKind === "boundary") {
+            consume();
+            noteBoundaryWheel();
+            return;
+          }
           if (gestureCommitted || transitionActive) {
             consume();
             const beginsQueuedGesture = (
@@ -861,6 +1146,7 @@ export function HomeStoryMotionClient() {
               const label = control.dataset.storyJump;
               const frameIndex = motionStory.frames.findIndex((frame) => frame.id === label);
               if (frameIndex < 0) return;
+              cancelStoryBoundary();
               resetGesture();
               clearInternalScrollGesture();
               goToFrame(motionIndex, frameIndex);
@@ -870,6 +1156,7 @@ export function HomeStoryMotionClient() {
           });
           motionStory.story.querySelectorAll<HTMLElement>("[data-story-replay]").forEach((control) => {
             const click = () => {
+              cancelStoryBoundary();
               resetGesture();
               clearInternalScrollGesture();
               goToFrame(motionIndex, 0);
@@ -883,6 +1170,7 @@ export function HomeStoryMotionClient() {
         actionCleanups.push(() => window.cancelAnimationFrame(refreshFrame));
         const requestRefresh = () => {
           if (disposed || run !== generation) return;
+          if (transitionKind === "boundary") cancelStoryBoundary();
           resetQueuedGesture();
           maybeReleaseGesture();
           if (refreshFrame) return;
@@ -936,10 +1224,14 @@ export function HomeStoryMotionClient() {
         window.addEventListener("load", requestRefresh, { passive: true });
         actionCleanups.push(() => window.removeEventListener("load", requestRefresh));
         stop = () => {
+          if (transitionKind === "boundary") cancelStoryBoundary();
           transitionSerial += 1;
           scrollTween?.kill();
           scrollTween = undefined;
+          activeViewTransition?.skipTransition();
+          activeViewTransition = undefined;
           transitionActive = false;
+          transitionKind = undefined;
           activeDestination = undefined;
           activeBoundaryTarget = undefined;
           activeTransitionStories = [];
